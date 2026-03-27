@@ -12,23 +12,23 @@ import pandas as pd
 st.set_page_config(page_title="Production Support Jira Board — Live Dashboard", page_icon="📊",
                    layout="wide", initial_sidebar_state="collapsed")
 
-st.markdown("""
-<style>
-  #MainMenu,footer,header{visibility:hidden}
-  .block-container{padding:1.2rem 2rem 2rem!important;max-width:100%!important}
-  .stApp{background:#F4F3EF!important}
-  /* Hide Streamlit form border/bg */
-  div[data-testid="stForm"]{background:transparent!important;border:none!important;padding:0!important}
-  /* Refresh button */
-  div[data-testid="stForm"] button{
-      background:rgba(255,255,255,0.15)!important;color:white!important;
-      border:1px solid rgba(255,255,255,0.4)!important;border-radius:20px!important;
-      font-size:18px!important;height:34px!important;width:34px!important;
-      min-width:34px!important;padding:0!important;line-height:1!important;
-  }
-  div[data-testid="stForm"] button:hover{background:rgba(255,255,255,0.28)!important}
-  div[data-testid="stForm"] > div {background:transparent!important}
-</style>""", unsafe_allow_html=True)
+# st.markdown("""
+# <style>
+#   #MainMenu,footer,header{visibility:hidden}
+#   .block-container{padding:1.2rem 2rem 2rem!important;max-width:100%!important}
+#   .stApp{background:#F4F3EF!important}
+#   /* Hide Streamlit form border/bg */
+#   div[data-testid="stForm"]{background:transparent!important;border:none!important;padding:0!important}
+#   /* Refresh button */
+#   div[data-testid="stForm"] button{
+#       background:rgba(255,255,255,0.15)!important;color:white!important;
+#       border:1px solid rgba(255,255,255,0.4)!important;border-radius:20px!important;
+#       font-size:18px!important;height:34px!important;width:34px!important;
+#       min-width:34px!important;padding:0!important;line-height:1!important;
+#   }
+#   div[data-testid="stForm"] button:hover{background:rgba(255,255,255,0.28)!important}
+#   div[data-testid="stForm"] > div {background:transparent!important}
+# </style>""", unsafe_allow_html=True)
 
 try:
     JIRA_BASE  = st.secrets["JIRA_BASE_URL"].rstrip("/")
