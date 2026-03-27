@@ -3,4 +3,8 @@ base = "light"
 backgroundColor = "#F4F3EF"
 secondaryBackgroundColor = "#FFFFFF"
 textColor = "#1a1a18"
+primaryColor = "#0D9E75"
 font = "sans serif"
+
+[server]
+headless = true
