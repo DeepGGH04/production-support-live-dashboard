@@ -24,12 +24,13 @@ st.markdown("""
   }
   div[data-testid="stForm"] > div > div {background:transparent!important}
   div[data-testid="stForm"] button{
-      background:rgba(255,255,255,.15)!important;color:white!important;
-      border:1px solid rgba(255,255,255,.35)!important;border-radius:8px!important;
-      font-size:14px!important;font-weight:600!important;padding:10px 0!important;
-      width:100%!important;margin-top:4px!important;
+      background:#0D9E75!important;color:white!important;
+      border:none!important;border-radius:8px!important;
+      font-size:15px!important;font-weight:600!important;
+      height:60px!important;width:100%!important;margin-top:8px!important;
+      letter-spacing:.02em!important;
   }
-  div[data-testid="stForm"] button:hover{background:rgba(255,255,255,.28)!important}
+  div[data-testid="stForm"] button:hover{background:#0b8a64!important}
   div[data-testid="stForm"] p{color:white!important}
 </style>""", unsafe_allow_html=True)
 
@@ -106,7 +107,7 @@ def load_data():
 
 now_str = datetime.now(ZoneInfo("America/New_York")).strftime("%d %b %Y, %H:%M EST")
 CARD = "background:white;border-radius:12px;border:1px solid #e8e6e0;padding:20px 24px;"
-LBL  = "font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:12px;display:block"
+LBL  = "font-size:13px;font-weight:600;color:#555;margin-bottom:12px;display:block;letter-spacing:.02em"
 
 # ── Header ────────────────────────────────────────────────
 with st.form("hdr"):
@@ -129,7 +130,7 @@ with st.form("hdr"):
         </div>""", unsafe_allow_html=True)
     with cc:
         st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("🔄 Refresh", use_container_width=True)
+        submitted = st.form_submit_button("Refresh", use_container_width=True)
     if submitted:
         st.cache_data.clear(); st.rerun()
 
