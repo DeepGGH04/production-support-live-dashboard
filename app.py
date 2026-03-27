@@ -314,41 +314,41 @@ c1, c2 = st.columns(2)
 
 with c1:
     with st.container(border=True):
-    st.markdown('<p class="sec-lbl">Active ticket status</p>', unsafe_allow_html=True)
-    sc = {}
-    for i in active:
-        s = sname(i); sc[s] = sc.get(s, 0) + 1
-    if sc:
-        fig = go.Figure(go.Pie(
-            labels=list(sc.keys()), values=list(sc.values()),
-            hole=0.6, textposition="inside", textinfo="percent",
-            marker_colors=["#F59E0B","#9CA3AF","#3B82F6","#EF4444","#0D9E75","#8B5CF6","#14B8A6"],
-        ))
-        fig.update_layout(**{**CHART_LAYOUT, "height": 300},
-            legend=dict(
-                orientation="h", xanchor="center", x=0.5,
-                yanchor="top", y=-0.08, font=dict(size=10)
+        st.markdown('<p class="sec-lbl">Active ticket status</p>', unsafe_allow_html=True)
+        sc = {}
+        for i in active:
+            s = sname(i); sc[s] = sc.get(s, 0) + 1
+        if sc:
+            fig = go.Figure(go.Pie(
+                labels=list(sc.keys()), values=list(sc.values()),
+                hole=0.6, textposition="inside", textinfo="percent",
+                marker_colors=["#F59E0B","#9CA3AF","#3B82F6","#EF4444","#0D9E75","#8B5CF6","#14B8A6"],
             ))
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            fig.update_layout(**{**CHART_LAYOUT, "height": 300},
+                legend=dict(
+                    orientation="h", xanchor="center", x=0.5,
+                    yanchor="top", y=-0.08, font=dict(size=10)
+                ))
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 with c2:
     with st.container(border=True):
-    st.markdown('<p class="sec-lbl">Active by request type</p>', unsafe_allow_html=True)
-    rc = {}
-    for i in active:
-        v = get_rt(i)
-        if v: rc[v] = rc.get(v, 0) + 1
-    if rc:
-        df_rt = pd.DataFrame(sorted(rc.items(), key=lambda x: x[1]), columns=["Type", "Count"])
-        fig2 = px.bar(df_rt, x="Count", y="Type", orientation="h",
-                      color_discrete_sequence=["#3B82F6"],
-                      text="Count")
-        fig2.update_traces(textposition="outside", textfont_size=10)
-        fig2.update_layout(**{**CHART_LAYOUT, "height": 300},
-            xaxis=dict(showgrid=True, gridcolor="#F0EEEA", title=""),
-            yaxis=dict(showgrid=False, title="", automargin=True))
-        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+        st.markdown('<p class="sec-lbl">Active by request type</p>', unsafe_allow_html=True)
+        rc = {}
+        for i in active:
+            v = get_rt(i)
+            if v: rc[v] = rc.get(v, 0) + 1
+        if rc:
+            df_rt = pd.DataFrame(sorted(rc.items(), key=lambda x: x[1]), columns=["Type", "Count"])
+            fig2 = px.bar(df_rt, x="Count", y="Type", orientation="h",
+                          color_discrete_sequence=["#3B82F6"],
+                          text="Count")
+            fig2.update_traces(textposition="outside", textfont_size=10)
+            fig2.update_layout(**{**CHART_LAYOUT, "height": 300},
+                xaxis=dict(showgrid=True, gridcolor="#F0EEEA", title=""),
+                yaxis=dict(showgrid=False, title="", automargin=True))
+            st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
 
 # ── Charts row 2 ──────────────────────────────────────────
@@ -356,32 +356,32 @@ c3, c4 = st.columns(2)
 
 with c3:
     with st.container(border=True):
-    st.markdown(f'<p class="sec-lbl">Resolution reasons — this week ({len(res_week)} tickets)</p>', unsafe_allow_html=True)
-    rb_wk = resb(res_week)
-    if rb_wk:
-        df_wk = pd.DataFrame(sorted(rb_wk.items(), key=lambda x: x[1])[-7:], columns=["Reason","Count"])
-        fig3 = px.bar(df_wk, x="Count", y="Reason", orientation="h",
-                      color_discrete_sequence=["#0D9E75"], text="Count")
-        fig3.update_traces(textposition="outside", textfont_size=10)
-        fig3.update_layout(**CHART_LAYOUT,
-            xaxis=dict(showgrid=True, gridcolor="#F0EEEA", title=""),
-            yaxis=dict(showgrid=False, title=""))
-        st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
+        st.markdown(f'<p class="sec-lbl">Resolution reasons — this week ({len(res_week)} tickets)</p>', unsafe_allow_html=True)
+        rb_wk = resb(res_week)
+        if rb_wk:
+            df_wk = pd.DataFrame(sorted(rb_wk.items(), key=lambda x: x[1])[-7:], columns=["Reason","Count"])
+            fig3 = px.bar(df_wk, x="Count", y="Reason", orientation="h",
+                          color_discrete_sequence=["#0D9E75"], text="Count")
+            fig3.update_traces(textposition="outside", textfont_size=10)
+            fig3.update_layout(**CHART_LAYOUT,
+                xaxis=dict(showgrid=True, gridcolor="#F0EEEA", title=""),
+                yaxis=dict(showgrid=False, title=""))
+            st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
 
 
 with c4:
     with st.container(border=True):
-    st.markdown(f'<p class="sec-lbl">Resolution reasons — this month ({len(res_mon)} tickets)</p>', unsafe_allow_html=True)
-    rb_mo = resb(res_mon)
-    if rb_mo:
-        df_mo = pd.DataFrame(sorted(rb_mo.items(), key=lambda x: x[1])[-8:], columns=["Reason","Count"])
-        fig4 = px.bar(df_mo, x="Count", y="Reason", orientation="h",
-                      color_discrete_sequence=["#7C3AED"], text="Count")
-        fig4.update_traces(textposition="outside", textfont_size=10)
-        fig4.update_layout(**CHART_LAYOUT,
-            xaxis=dict(showgrid=True, gridcolor="#F0EEEA", title=""),
-            yaxis=dict(showgrid=False, title=""))
-        st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
+        st.markdown(f'<p class="sec-lbl">Resolution reasons — this month ({len(res_mon)} tickets)</p>', unsafe_allow_html=True)
+        rb_mo = resb(res_mon)
+        if rb_mo:
+            df_mo = pd.DataFrame(sorted(rb_mo.items(), key=lambda x: x[1])[-8:], columns=["Reason","Count"])
+            fig4 = px.bar(df_mo, x="Count", y="Reason", orientation="h",
+                          color_discrete_sequence=["#7C3AED"], text="Count")
+            fig4.update_traces(textposition="outside", textfont_size=10)
+            fig4.update_layout(**CHART_LAYOUT,
+                xaxis=dict(showgrid=True, gridcolor="#F0EEEA", title=""),
+                yaxis=dict(showgrid=False, title=""))
+            st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
 
 
 st.markdown("---")
