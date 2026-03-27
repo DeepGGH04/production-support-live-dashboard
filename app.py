@@ -55,7 +55,7 @@ st.markdown("""
   /* KPI cards */
   .kpi {
       background: white; border-radius: 12px; padding: 18px 20px;
-      border: 1px solid #e8e6e0; height: 110px;
+      border: 1px solid #e8e6e0; min-height: 120px;
   }
   .kpi-lbl { font-size: 13px; color: #888; margin-bottom: 6px; }
   .kpi-val { font-size: 38px; font-weight: 700; color: #1a1a18; line-height: 1.1; }
@@ -88,6 +88,13 @@ st.markdown("""
   .panel {
       background: white; border-radius: 12px;
       border: 1px solid #e8e6e0; padding: 16px 18px;
+  }
+  /* Style Streamlit native containers to match */
+  [data-testid="stVerticalBlockBorderWrapper"] {
+      background: white !important;
+      border: 1px solid #e8e6e0 !important;
+      border-radius: 12px !important;
+      padding: 12px !important;
   }
 
   /* Refresh button */
@@ -306,7 +313,7 @@ st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 c1, c2 = st.columns(2)
 
 with c1:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    with st.container(border=True):, unsafe_allow_html=True)
     st.markdown('<p class="sec-lbl">Active ticket status</p>', unsafe_allow_html=True)
     sc = {}
     for i in active:
@@ -323,10 +330,10 @@ with c1:
                 yanchor="top", y=-0.08, font=dict(size=10)
             ))
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-    st.markdown('</div>', unsafe_allow_html=True)
+
 
 with c2:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    with st.container(border=True):, unsafe_allow_html=True)
     st.markdown('<p class="sec-lbl">Active by request type</p>', unsafe_allow_html=True)
     rc = {}
     for i in active:
@@ -342,13 +349,13 @@ with c2:
             xaxis=dict(showgrid=True, gridcolor="#F0EEEA", title=""),
             yaxis=dict(showgrid=False, title="", automargin=True))
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
-    st.markdown('</div>', unsafe_allow_html=True)
+
 
 # ── Charts row 2 ──────────────────────────────────────────
 c3, c4 = st.columns(2)
 
 with c3:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    with st.container(border=True):, unsafe_allow_html=True)
     st.markdown(f'<p class="sec-lbl">Resolution reasons — this week ({len(res_week)} tickets)</p>', unsafe_allow_html=True)
     rb_wk = resb(res_week)
     if rb_wk:
@@ -360,10 +367,10 @@ with c3:
             xaxis=dict(showgrid=True, gridcolor="#F0EEEA", title=""),
             yaxis=dict(showgrid=False, title=""))
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
-    st.markdown('</div>', unsafe_allow_html=True)
+
 
 with c4:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    with st.container(border=True):, unsafe_allow_html=True)
     st.markdown(f'<p class="sec-lbl">Resolution reasons — this month ({len(res_mon)} tickets)</p>', unsafe_allow_html=True)
     rb_mo = resb(res_mon)
     if rb_mo:
@@ -375,7 +382,7 @@ with c4:
             xaxis=dict(showgrid=True, gridcolor="#F0EEEA", title=""),
             yaxis=dict(showgrid=False, title=""))
         st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
-    st.markdown('</div>', unsafe_allow_html=True)
+
 
 st.markdown("---")
 
