@@ -99,13 +99,13 @@ st.markdown("""
 
   /* Refresh button */
   div[data-testid="stButton"] > button {
-      background: #0F1F3D !important; color: white !important;
+      background: #0D9E75 !important; color: white !important;
       border-radius: 8px !important; border: none !important;
-      padding: 8px 20px !important; font-weight: 500 !important;
-      width: 100%;
+      font-weight: 600 !important; width: 100%;
+      height: 42px !important;
   }
   div[data-testid="stButton"] > button:hover {
-      background: #1a3560 !important;
+      background: #0b8a64 !important; opacity: 0.9;
   }
 
   /* Dataframe */
@@ -222,31 +222,21 @@ CHART_LAYOUT = dict(
 # ── Header ────────────────────────────────────────────────
 now_str = datetime.now(timezone.utc).strftime("%d %b %Y, %H:%M UTC")
 
-# Refresh logic — use a form so button sits inside the header
-refresh = st.button("🔄 Refresh", key="refresh_btn")
-if refresh:
-    st.cache_data.clear()
-    st.rerun()
-
-st.markdown(f"""
-<style>
-  /* Hide the refresh button rendered above, we re-render it inside header */
-  div[data-testid="stButton"]:first-of-type {{ display: none; }}
-</style>
-<div class="dash-header">
-  <div>
-    <p class="dash-title">Production Support Jira Board — Live Dashboard</p>
-    <p class="dash-sub">Last updated: {now_str}</p>
-  </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <span class="live-pill">● Live · groundgamehealth</span>
-    <button onclick="window.location.reload()"
-      style="background:transparent;color:white;border:1px solid rgba(255,255,255,0.3);
-      border-radius:8px;padding:6px 16px;font-size:13px;cursor:pointer;white-space:nowrap">
-      🔄 Refresh
-    </button>
-  </div>
-</div>""", unsafe_allow_html=True)
+h1, h2 = st.columns([6, 1])
+with h1:
+    st.markdown(f"""
+    <div class="dash-header">
+      <div>
+        <p class="dash-title">Production Support Jira Board — Live Dashboard</p>
+        <p class="dash-sub">Last updated: {now_str}</p>
+      </div>
+      <span class="live-pill">● Live · groundgamehealth</span>
+    </div>""", unsafe_allow_html=True)
+with h2:
+    st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+    if st.button("🔄 Refresh", use_container_width=True, type="primary"):
+        st.cache_data.clear()
+        st.rerun()
 
 # ── Load ──────────────────────────────────────────────────
 with st.spinner("Fetching live data from Jira…"):
