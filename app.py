@@ -313,7 +313,7 @@ st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 c1, c2 = st.columns(2)
 
 with c1:
-    with st.container(border=True):, unsafe_allow_html=True)
+    with st.container(border=True):
     st.markdown('<p class="sec-lbl">Active ticket status</p>', unsafe_allow_html=True)
     sc = {}
     for i in active:
@@ -333,7 +333,7 @@ with c1:
 
 
 with c2:
-    with st.container(border=True):, unsafe_allow_html=True)
+    with st.container(border=True):
     st.markdown('<p class="sec-lbl">Active by request type</p>', unsafe_allow_html=True)
     rc = {}
     for i in active:
@@ -355,7 +355,7 @@ with c2:
 c3, c4 = st.columns(2)
 
 with c3:
-    with st.container(border=True):, unsafe_allow_html=True)
+    with st.container(border=True):
     st.markdown(f'<p class="sec-lbl">Resolution reasons — this week ({len(res_week)} tickets)</p>', unsafe_allow_html=True)
     rb_wk = resb(res_week)
     if rb_wk:
@@ -370,7 +370,7 @@ with c3:
 
 
 with c4:
-    with st.container(border=True):, unsafe_allow_html=True)
+    with st.container(border=True):
     st.markdown(f'<p class="sec-lbl">Resolution reasons — this month ({len(res_mon)} tickets)</p>', unsafe_allow_html=True)
     rb_mo = resb(res_mon)
     if rb_mo:
