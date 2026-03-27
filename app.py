@@ -260,7 +260,7 @@ st.markdown("<hr style='border:none;border-top:1px solid #e8e6e0;margin:8px 0 14
 # ── Tables ────────────────────────────────────────────────
 t1,t2=st.columns(2)
 with t1:
-    st.markdown("<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin:0 0 8px'>AGING BACKLOG — OLDEST OPEN TICKETS</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1a1a18;margin:0 0 8px'>AGING BACKLOG — OLDEST OPEN TICKETS</p>", unsafe_allow_html=True)
     if aged:
         st.dataframe(pd.DataFrame([{
             "Ticket":i["key"],"Summary":i.get("fields",{}).get("summary","")[:50],
@@ -270,7 +270,7 @@ with t1:
                            "Age (d)":st.column_config.NumberColumn(width="small")})
 
 with t2:
-    st.markdown(f"<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin:0 0 8px'>OPEN PRODUCTION BUGS ({len(bugs)})</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1a1a18;margin:0 0 8px'>OPEN PRODUCTION BUGS ({len(bugs)})</p>", unsafe_allow_html=True)
     if bugs:
         st.dataframe(pd.DataFrame([{
             "Ticket":b["key"],"Summary":b.get("fields",{}).get("summary","")[:48],
