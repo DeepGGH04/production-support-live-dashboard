@@ -26,6 +26,7 @@ st.markdown("""
   [data-testid="block-container"] {
       background-color: #F4F3EF !important;
       color: #1a1a18 !important;
+      font-size: 16px !important;
   }
   [data-testid="stBlock"], [data-testid="stVerticalBlock"],
   [data-testid="stHorizontalBlock"] {
@@ -34,7 +35,7 @@ st.markdown("""
   /* Hide streamlit chrome */
   #MainMenu, footer, header { visibility: hidden; }
   [data-testid="stToolbar"] { display: none; }
-  .block-container { padding-top: 1.5rem !important; max-width: 1200px; }
+  .block-container { padding-top: 1.5rem !important; max-width: 100% !important; padding-left: 2rem !important; padding-right: 2rem !important; }
 
   /* Header */
   .dash-header {
@@ -43,11 +44,11 @@ st.markdown("""
       display: flex; justify-content: space-between; align-items: center;
       width: 100%;
   }
-  .dash-title { font-size: 20px; font-weight: 600; margin: 0; color: white; }
-  .dash-sub   { font-size: 12px; color: #94A3B8; margin: 3px 0 0; }
+  .dash-title { font-size: 22px; font-weight: 600; margin: 0; color: white; }
+  .dash-sub   { font-size: 13px; color: #94A3B8; margin: 3px 0 0; }
   .live-pill  {
       background: #0D9E75; color: white; border-radius: 20px;
-      padding: 5px 14px; font-size: 11px; font-weight: 700;
+      padding: 5px 14px; font-size: 13px; font-weight: 700;
       text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
   }
 
@@ -56,9 +57,9 @@ st.markdown("""
       background: white; border-radius: 12px; padding: 18px 20px;
       border: 1px solid #e8e6e0; height: 110px;
   }
-  .kpi-lbl { font-size: 11px; color: #888; margin-bottom: 6px; }
-  .kpi-val { font-size: 34px; font-weight: 700; color: #1a1a18; line-height: 1.1; }
-  .kpi-sub { font-size: 11px; color: #888; margin-top: 4px; }
+  .kpi-lbl { font-size: 13px; color: #888; margin-bottom: 6px; }
+  .kpi-val { font-size: 38px; font-weight: 700; color: #1a1a18; line-height: 1.1; }
+  .kpi-sub { font-size: 13px; color: #888; margin-top: 4px; }
   .up   { color: #C0392B; font-weight: 600; }
   .down { color: #27700F; font-weight: 600; }
 
@@ -71,15 +72,15 @@ st.markdown("""
   .ins-d { border-left: 4px solid #EF4444; }
   .ins-w { border-left: 4px solid #F59E0B; }
   .ins-i { border-left: 4px solid #3B82F6; }
-  .ins-ttl { font-weight: 700; font-size: 12px; margin-bottom: 5px; }
+  .ins-ttl { font-weight: 700; font-size: 14px; margin-bottom: 5px; }
   .ins-ttl-d { color: #991B1B; }
   .ins-ttl-w { color: #92400E; }
   .ins-ttl-i { color: #1E40AF; }
-  .ins-body { font-size: 11px; color: #555; line-height: 1.5; }
+  .ins-body { font-size: 13px; color: #555; line-height: 1.5; }
 
   /* Section label */
   .sec-lbl {
-      font-size: 10px; font-weight: 700; letter-spacing: .1em;
+      font-size: 11px; font-weight: 700; letter-spacing: .1em;
       text-transform: uppercase; color: #888; margin: 16px 0 8px;
   }
 
@@ -207,8 +208,8 @@ def load_data():
 # Chart helper — consistent styling
 CHART_LAYOUT = dict(
     paper_bgcolor="white", plot_bgcolor="white",
-    margin=dict(t=10, b=10, l=10, r=10), height=260,
-    font=dict(family="sans-serif", size=11, color="#475569"),
+    margin=dict(t=10, b=10, l=10, r=10), height=280,
+    font=dict(family="sans-serif", size=13, color="#475569"),
 )
 
 # ── Header ────────────────────────────────────────────────
@@ -316,8 +317,7 @@ with c1:
             hole=0.6, textposition="inside", textinfo="percent",
             marker_colors=["#F59E0B","#9CA3AF","#3B82F6","#EF4444","#0D9E75","#8B5CF6","#14B8A6"],
         ))
-        fig.update_layout(**CHART_LAYOUT,
-            height=300,
+        fig.update_layout(**{**CHART_LAYOUT, "height": 300},
             legend=dict(
                 orientation="h", xanchor="center", x=0.5,
                 yanchor="top", y=-0.08, font=dict(size=10)
@@ -338,8 +338,7 @@ with c2:
                       color_discrete_sequence=["#3B82F6"],
                       text="Count")
         fig2.update_traces(textposition="outside", textfont_size=10)
-        fig2.update_layout(**CHART_LAYOUT,
-            height=300,
+        fig2.update_layout(**{**CHART_LAYOUT, "height": 300},
             xaxis=dict(showgrid=True, gridcolor="#F0EEEA", title=""),
             yaxis=dict(showgrid=False, title="", automargin=True))
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
