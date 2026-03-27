@@ -9,26 +9,16 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
-st.set_page_config(page_title="Production Support Jira Board — Live Dashboard", page_icon="📊",
+st.set_page_config(page_title="Support Ops Dashboard", page_icon="📊",
                    layout="wide", initial_sidebar_state="collapsed")
 
-# st.markdown("""
-# <style>
-#   #MainMenu,footer,header{visibility:hidden}
-#   .block-container{padding:1.2rem 2rem 2rem!important;max-width:100%!important}
-#   .stApp{background:#F4F3EF!important}
-#   /* Hide Streamlit form border/bg */
-#   div[data-testid="stForm"]{background:transparent!important;border:none!important;padding:0!important}
-#   /* Refresh button */
-#   div[data-testid="stForm"] button{
-#       background:rgba(255,255,255,0.15)!important;color:white!important;
-#       border:1px solid rgba(255,255,255,0.4)!important;border-radius:20px!important;
-#       font-size:18px!important;height:34px!important;width:34px!important;
-#       min-width:34px!important;padding:0!important;line-height:1!important;
-#   }
-#   div[data-testid="stForm"] button:hover{background:rgba(255,255,255,0.28)!important}
-#   div[data-testid="stForm"] > div {background:transparent!important}
-# </style>""", unsafe_allow_html=True)
+st.markdown("""
+<style>
+  #MainMenu,footer,header{visibility:hidden}
+  .block-container{padding:1.2rem 2rem 2rem!important;max-width:100%!important}
+  .stApp{background:#F4F3EF!important}
+
+</style>""", unsafe_allow_html=True)
 
 try:
     JIRA_BASE  = st.secrets["JIRA_BASE_URL"].rstrip("/")
@@ -123,27 +113,10 @@ st.markdown(f"""
                 padding:7px 18px;font-size:12px;font-weight:700;letter-spacing:.04em">
 <span style="color:#ff4444">●</span> LIVE · GROUNDGAMEHEALTH
     </div>
-    <div id="refresh-placeholder"></div>
   </div>
 </div>""", unsafe_allow_html=True)
 
-# Refresh button positioned absolutely over the header
-with st.form("rf"):
-    submitted = st.form_submit_button("↺")
-    if submitted:
-        st.cache_data.clear(); st.rerun()
 
-st.markdown("""
-<style>
-  div[data-testid="stForm"] {
-      position:relative; margin-top:-52px!important;
-      margin-left:calc(100% - 48px)!important;
-      width:36px!important; height:36px!important;
-      z-index:100;
-  }
-  div[data-testid="stForm"] > div { background:transparent!important; }
-  div[data-testid="stForm"] > div > div { gap:0!important; }
-</style>""", unsafe_allow_html=True)
 
 # ── Load ──────────────────────────────────────────────────
 with st.spinner("Loading live data from Jira…"):
@@ -280,4 +253,4 @@ with t2:
     else:
         st.success("No open production bugs 🎉")
 
-st.markdown(f"<p style='text-align:center;font-size:12px;color:#aaa;margin-top:20px;padding-top:16px;border-top:1px solid #e8e6e0'>Production Support Jira Board — Live Dashboard · groundgamehealth.atlassian.net · {now_str}</p>",unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center;font-size:12px;color:#aaa;margin-top:20px;padding-top:16px;border-top:1px solid #e8e6e0'>Support Operations Live Dashboard · groundgamehealth.atlassian.net · {now_str}</p>",unsafe_allow_html=True)
