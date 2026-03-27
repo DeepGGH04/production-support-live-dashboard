@@ -9,7 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
-st.set_page_config(page_title="Support Ops Dashboard", page_icon="📊",
+st.set_page_config(page_title="Production Support Jira Board — Live Dashboard", page_icon="📊",
                    layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
@@ -280,4 +280,4 @@ with t2:
     else:
         st.success("No open production bugs 🎉")
 
-st.markdown(f"<p style='text-align:center;font-size:12px;color:#aaa;margin-top:20px;padding-top:16px;border-top:1px solid #e8e6e0'>Support Operations Live Dashboard · groundgamehealth.atlassian.net · {now_str}</p>",unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center;font-size:12px;color:#aaa;margin-top:20px;padding-top:16px;border-top:1px solid #e8e6e0'>Production Support Jira Board — Live Dashboard · groundgamehealth.atlassian.net · {now_str}</p>",unsafe_allow_html=True)
