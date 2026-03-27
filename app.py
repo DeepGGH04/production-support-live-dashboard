@@ -17,21 +17,18 @@ st.markdown("""
   #MainMenu,footer,header{visibility:hidden}
   .block-container{padding:1.2rem 2rem 2rem!important;max-width:100%!important}
   .stApp{background:#F4F3EF!important}
-  /* Form = header */
-  div[data-testid="stForm"]{
-      background:#0F1F3D!important;border-radius:12px!important;
-      border:none!important;padding:20px 28px!important;margin-bottom:16px!important;
-  }
-  div[data-testid="stForm"] > div > div {background:transparent!important}
+  /* Hide Streamlit form border/bg */
+  div[data-testid="stForm"]{background:transparent!important;border:none!important;padding:0!important}
+  /* Refresh button */
   div[data-testid="stForm"] button{
       background:rgba(255,255,255,0.15)!important;color:white!important;
-      border:1px solid rgba(255,255,255,0.3)!important;border-radius:8px!important;
-      font-size:22px!important;font-weight:400!important;
-      height:44px!important;width:44px!important;min-width:44px!important;
-      padding:0!important;margin-top:16px!important;line-height:1!important;
+      border:1px solid rgba(255,255,255,0.4)!important;border-radius:8px!important;
+      font-size:20px!important;height:44px!important;width:44px!important;
+      min-width:44px!important;padding:0!important;line-height:1!important;
+      display:flex!important;align-items:center!important;justify-content:center!important;
   }
-  div[data-testid="stForm"] button:hover{background:rgba(255,255,255,0.25)!important}
-  div[data-testid="stForm"] p{color:white!important}
+  div[data-testid="stForm"] button:hover{background:rgba(255,255,255,0.28)!important}
+  div[data-testid="stForm"] > div {background:transparent!important}
 </style>""", unsafe_allow_html=True)
 
 try:
@@ -107,36 +104,51 @@ def load_data():
 
 now_str = datetime.now(ZoneInfo("America/New_York")).strftime("%d %b %Y, %H:%M EST")
 CARD = "background:white;border-radius:12px;border:1px solid #e8e6e0;padding:20px 24px;"
-LBL  = "font-size:13px;font-weight:600;color:#555;margin-bottom:12px;display:block;letter-spacing:.02em"
+BG   = dict(paper_bgcolor="white",plot_bgcolor="white",
+            margin=dict(t=44,b=10,l=10,r=24),height=320,
+            font=dict(family="sans-serif",size=12,color="#475569"))
 
 # ── Header ────────────────────────────────────────────────
-with st.form("hdr"):
-    ca, cb, cc = st.columns([6, 2, 1])
-    with ca:
-        st.markdown(f"""
-        <div style="margin:2px 0 0">
-          <div style="font-size:22px;font-weight:700;color:white;margin-bottom:6px;line-height:1.2">
-            Production Support Jira Board — Live Dashboard
-          </div>
-          <div style="font-size:13px;color:#94A3B8">Last updated: {now_str}</div>
-        </div>""", unsafe_allow_html=True)
-    with cb:
-        st.markdown("""
-        <div style="display:flex;align-items:center;height:100%;padding-top:14px">
-          <div style="background:#0D9E75;color:white;border-radius:20px;
-            padding:7px 20px;font-size:12px;font-weight:700;letter-spacing:.05em;white-space:nowrap">
-            ● LIVE · GROUNDGAMEHEALTH
-          </div>
-        </div>""", unsafe_allow_html=True)
-    with cc:
-        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("↺", use_container_width=True)
+st.markdown(f"""
+<div style="background:#0F1F3D;border-radius:12px;padding:0 28px;
+            display:flex;align-items:center;justify-content:space-between;
+            height:80px;margin-bottom:16px">
+  <div>
+    <div style="font-size:22px;font-weight:700;color:white;line-height:1.2">
+      Production Support Jira Board — Live Dashboard
+    </div>
+    <div style="font-size:12px;color:#94A3B8;margin-top:4px">Last updated: {now_str}</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <div style="background:#0D9E75;color:white;border-radius:20px;
+                padding:7px 18px;font-size:12px;font-weight:700;letter-spacing:.04em">
+      ● LIVE · GROUNDGAMEHEALTH
+    </div>
+    <div id="refresh-placeholder"></div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+# Refresh button positioned absolutely over the header
+with st.form("rf"):
+    submitted = st.form_submit_button("↺")
     if submitted:
         st.cache_data.clear(); st.rerun()
 
+st.markdown("""
+<style>
+  div[data-testid="stForm"] {
+      position:relative; margin-top:-68px!important;
+      margin-left:calc(100% - 60px)!important;
+      width:44px!important; height:44px!important;
+      z-index:100;
+  }
+  div[data-testid="stForm"] > div { background:transparent!important; }
+  div[data-testid="stForm"] > div > div { gap:0!important; }
+</style>""", unsafe_allow_html=True)
+
 # ── Load ──────────────────────────────────────────────────
 with st.spinner("Loading live data from Jira…"):
-    try: data = load_data()
+    try: data=load_data()
     except Exception as e: st.error(f"⚠️ {e}"); st.stop()
 
 active=data["active"]; monday=data["monday"]
@@ -146,52 +158,42 @@ aged=sorted(active,key=lambda i:-age(i)); oldest=aged[0] if aged else None
 oa=age(oldest) if oldest else 0; ok=oldest["key"] if oldest else "N/A"
 
 # ── KPI cards ─────────────────────────────────────────────
-st.markdown(f"<span style='{LBL}'>Key metrics at a glance</span>", unsafe_allow_html=True)
-for col, lbl, val, sub in zip(st.columns(4), [
-    "Active tickets","Resolved this week","Resolved this month","Oldest open ticket"
-],[
-    str(len(active)), str(len(res_week)), str(len(res_mon)), f"{oa}d"
-],[
-    f'<span style="color:{nc};font-weight:600;font-size:13px">{ns}{net}</span> <span style="font-size:13px;color:#888">vs Monday ({len(monday)})</span>',
-    '<span style="font-size:13px;color:#888">tickets closed this week</span>',
-    '<span style="font-size:13px;color:#888">across all request types</span>',
-    f'<span style="color:#C0392B;font-weight:600;font-size:13px">{ok}</span>',
-]):
+st.markdown("<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin:0 0 10px'>KEY METRICS AT A GLANCE</p>", unsafe_allow_html=True)
+for col,lbl,val,sub in zip(st.columns(4),[
+    "Active tickets","Resolved this week","Resolved this month","Oldest open ticket"],[
+    str(len(active)),str(len(res_week)),str(len(res_mon)),f"{oa}d"],[
+    f'<span style="color:{nc};font-weight:600">{ns}{net}</span> vs Monday ({len(monday)})',
+    "tickets closed this week","across all request types",
+    f'<span style="color:#C0392B;font-weight:600">{ok}</span>']):
     with col:
-        st.markdown(f"""
-        <div style="{CARD}">
-          <div style="font-size:13px;color:#888;margin-bottom:10px">{lbl}</div>
-          <div style="font-size:40px;font-weight:700;color:#1a1a18;line-height:1;margin-bottom:8px">{val}</div>
-          <div>{sub}</div>
+        st.markdown(f"""<div style="{CARD}">
+          <div style="font-size:13px;color:#888;margin-bottom:8px">{lbl}</div>
+          <div style="font-size:40px;font-weight:700;color:#1a1a18;line-height:1;margin-bottom:6px">{val}</div>
+          <div style="font-size:13px;color:#888">{sub}</div>
         </div>""", unsafe_allow_html=True)
 
 st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
-# ── Insight cards ─────────────────────────────────────────
-st.markdown(f"<span style='{LBL}'>Key insights</span>", unsafe_allow_html=True)
-trend = "Triage session recommended." if net>5 else "Backlog is stable."
-bmsg  = f"{len(bugs)} active production bug{'s' if len(bugs)!=1 else ''} in the backlog. Requires sprint commitment." if bugs else "No open production bugs 🎉"
-for col, (bc,tc,title,body) in zip(st.columns(3), [
+# ── Insights ─────────────────────────────────────────────
+st.markdown("<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin:0 0 10px'>KEY INSIGHTS</p>", unsafe_allow_html=True)
+trend="Triage session recommended." if net>5 else "Backlog is stable."
+bmsg=f"{len(bugs)} active production bug{'s' if len(bugs)!=1 else ''} in the backlog. Requires sprint commitment." if bugs else "No open production bugs 🎉"
+for col,(bc,tc,title,body) in zip(st.columns(3),[
     ("#EF4444","#991B1B","Backlog trend",  f"Net {ns}{net} tickets this week — active count is {len(active)}. {trend}"),
     ("#F59E0B","#92400E","Aging tickets",  f"Oldest open ticket is {oa} days old ({ok}). Review tickets aged over 60 days."),
-    ("#3B82F6","#1E40AF","Production bugs", bmsg),
-]):
+    ("#3B82F6","#1E40AF","Production bugs",bmsg)]):
     with col:
-        st.markdown(f"""
-        <div style="background:white;border-left:4px solid {bc};
-          border-top:1px solid #e8e6e0;border-right:1px solid #e8e6e0;border-bottom:1px solid #e8e6e0;
-          border-radius:0 10px 10px 0;padding:16px 18px;min-height:90px">
-          <div style="font-size:14px;font-weight:700;color:{tc};margin-bottom:6px">{title}</div>
+        st.markdown(f"""<div style="background:white;border-left:4px solid {bc};
+          border-top:1px solid #e8e6e0;border-right:1px solid #e8e6e0;
+          border-bottom:1px solid #e8e6e0;border-radius:0 10px 10px 0;
+          padding:16px 18px;min-height:85px">
+          <div style="font-size:14px;font-weight:700;color:{tc};margin-bottom:5px">{title}</div>
           <div style="font-size:13px;color:#555;line-height:1.6">{body}</div>
         </div>""", unsafe_allow_html=True)
 
 st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
 # ── Charts row 1 ──────────────────────────────────────────
-BG = dict(paper_bgcolor="white", plot_bgcolor="white",
-          margin=dict(t=10,b=10,l=10,r=24), height=320,
-          font=dict(family="sans-serif", size=12, color="#475569"))
-
 sc={}
 for i in active: s=sname(i); sc[s]=sc.get(s,0)+1
 rc={}
@@ -199,13 +201,14 @@ for i in active:
     v=get_rt(i)
     if v: rc[v]=rc.get(v,0)+1
 
-c1, c2 = st.columns(2)
+c1,c2=st.columns(2)
 with c1:
     fig=go.Figure(go.Pie(labels=list(sc.keys()),values=list(sc.values()),
         hole=0.58,textposition="inside",textinfo="percent",
         marker_colors=["#F59E0B","#9CA3AF","#3B82F6","#EF4444","#0D9E75","#8B5CF6","#14B8A6"]))
-    fig.update_layout(**{**BG,"height":340},
-        title=dict(text="Active ticket status",font=dict(size=13,color="#555"),x=0,pad=dict(l=4)),
+    fig.update_layout(**BG,
+        title=dict(text="ACTIVE TICKET STATUS",font=dict(size=11,color="#888",family="sans-serif"),
+                   x=0,xanchor="left",pad=dict(l=4,t=4)),
         legend=dict(orientation="h",xanchor="center",x=0.5,yanchor="top",y=-0.04,font=dict(size=11)))
     st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
 
@@ -214,17 +217,18 @@ with c2:
     fig2=px.bar(df_rt,x="Count",y="Type",orientation="h",
                 color_discrete_sequence=["#3B82F6"],text="Count")
     fig2.update_traces(textposition="outside",textfont_size=11)
-    fig2.update_layout(**{**BG,"height":340},
-        title=dict(text="Active by request type",font=dict(size=13,color="#555"),x=0,pad=dict(l=4)),
+    fig2.update_layout(**BG,
+        title=dict(text="ACTIVE BY REQUEST TYPE",font=dict(size=11,color="#888",family="sans-serif"),
+                   x=0,xanchor="left",pad=dict(l=4,t=4)),
         xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
         yaxis=dict(showgrid=False,title="",automargin=True))
     st.plotly_chart(fig2,use_container_width=True,config={"displayModeBar":False})
 
-st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
 # ── Charts row 2 ──────────────────────────────────────────
 rb_wk=resb(res_week); rb_mo=resb(res_mon)
-c3, c4 = st.columns(2)
+c3,c4=st.columns(2)
 
 with c3:
     if rb_wk:
@@ -232,7 +236,11 @@ with c3:
         fig3=px.bar(df_wk,x="Count",y="Reason",orientation="h",
                     color_discrete_sequence=["#0D9E75"],text="Count")
         fig3.update_traces(textposition="outside",textfont_size=11)
-        fig3.update_layout(**BG,title=dict(text=f"Resolution reasons — this week ({len(res_week)} tickets)",font=dict(size=13,color="#555"),x=0,pad=dict(l=4)),xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),yaxis=dict(showgrid=False,title=""))
+        fig3.update_layout(**BG,
+            title=dict(text=f"RESOLUTION REASONS — THIS WEEK ({len(res_week)} TICKETS)",
+                       font=dict(size=11,color="#888"),x=0,xanchor="left",pad=dict(l=4,t=4)),
+            xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
+            yaxis=dict(showgrid=False,title=""))
         st.plotly_chart(fig3,use_container_width=True,config={"displayModeBar":False})
 
 with c4:
@@ -241,15 +249,19 @@ with c4:
         fig4=px.bar(df_mo,x="Count",y="Reason",orientation="h",
                     color_discrete_sequence=["#7C3AED"],text="Count")
         fig4.update_traces(textposition="outside",textfont_size=11)
-        fig4.update_layout(**BG,title=dict(text=f"Resolution reasons — this month ({len(res_mon)} tickets)",font=dict(size=13,color="#555"),x=0,pad=dict(l=4)),xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),yaxis=dict(showgrid=False,title=""))
+        fig4.update_layout(**BG,
+            title=dict(text=f"RESOLUTION REASONS — THIS MONTH ({len(res_mon)} TICKETS)",
+                       font=dict(size=11,color="#888"),x=0,xanchor="left",pad=dict(l=4,t=4)),
+            xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
+            yaxis=dict(showgrid=False,title=""))
         st.plotly_chart(fig4,use_container_width=True,config={"displayModeBar":False})
 
 st.markdown("<hr style='border:none;border-top:1px solid #e8e6e0;margin:8px 0 14px'>",unsafe_allow_html=True)
 
 # ── Tables ────────────────────────────────────────────────
-t1, t2 = st.columns(2)
+t1,t2=st.columns(2)
 with t1:
-    st.markdown(f"<span style='{LBL}'>Aging backlog — oldest open tickets</span>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin:0 0 8px'>AGING BACKLOG — OLDEST OPEN TICKETS</p>", unsafe_allow_html=True)
     if aged:
         st.dataframe(pd.DataFrame([{
             "Ticket":i["key"],"Summary":i.get("fields",{}).get("summary","")[:50],
@@ -259,7 +271,7 @@ with t1:
                            "Age (d)":st.column_config.NumberColumn(width="small")})
 
 with t2:
-    st.markdown(f"<span style='{LBL}'>Open production bugs ({len(bugs)})</span>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin:0 0 8px'>OPEN PRODUCTION BUGS ({len(bugs)})</p>", unsafe_allow_html=True)
     if bugs:
         st.dataframe(pd.DataFrame([{
             "Ticket":b["key"],"Summary":b.get("fields",{}).get("summary","")[:48],
@@ -269,7 +281,4 @@ with t2:
     else:
         st.success("No open production bugs 🎉")
 
-st.markdown(f"""<p style="text-align:center;font-size:12px;color:#aaa;margin-top:20px;
-  padding-top:16px;border-top:1px solid #e8e6e0">
-  Support Operations Live Dashboard · groundgamehealth.atlassian.net · {now_str}
-</p>""", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center;font-size:12px;color:#aaa;margin-top:20px;padding-top:16px;border-top:1px solid #e8e6e0'>Support Operations Live Dashboard · groundgamehealth.atlassian.net · {now_str}</p>",unsafe_allow_html=True)
