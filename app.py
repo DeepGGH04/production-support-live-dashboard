@@ -24,13 +24,13 @@ st.markdown("""
   }
   div[data-testid="stForm"] > div > div {background:transparent!important}
   div[data-testid="stForm"] button{
-      background:#0D9E75!important;color:white!important;
-      border:none!important;border-radius:8px!important;
-      font-size:15px!important;font-weight:600!important;
-      height:60px!important;width:100%!important;margin-top:8px!important;
-      letter-spacing:.02em!important;
+      background:rgba(255,255,255,0.15)!important;color:white!important;
+      border:1px solid rgba(255,255,255,0.3)!important;border-radius:8px!important;
+      font-size:22px!important;font-weight:400!important;
+      height:44px!important;width:44px!important;min-width:44px!important;
+      padding:0!important;margin-top:16px!important;line-height:1!important;
   }
-  div[data-testid="stForm"] button:hover{background:#0b8a64!important}
+  div[data-testid="stForm"] button:hover{background:rgba(255,255,255,0.25)!important}
   div[data-testid="stForm"] p{color:white!important}
 </style>""", unsafe_allow_html=True)
 
@@ -130,7 +130,7 @@ with st.form("hdr"):
         </div>""", unsafe_allow_html=True)
     with cc:
         st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("Refresh", use_container_width=True)
+        submitted = st.form_submit_button("↺", use_container_width=True)
     if submitted:
         st.cache_data.clear(); st.rerun()
 
@@ -201,28 +201,23 @@ for i in active:
 
 c1, c2 = st.columns(2)
 with c1:
-    st.markdown(f"""
-    <div style="{CARD}padding:18px 20px;">
-      <span style="{LBL}">Active ticket status</span>
-    </div>""", unsafe_allow_html=True)
     fig=go.Figure(go.Pie(labels=list(sc.keys()),values=list(sc.values()),
         hole=0.58,textposition="inside",textinfo="percent",
         marker_colors=["#F59E0B","#9CA3AF","#3B82F6","#EF4444","#0D9E75","#8B5CF6","#14B8A6"]))
-    fig.update_layout(**BG,legend=dict(orientation="h",xanchor="center",x=0.5,
-                                       yanchor="top",y=-0.04,font=dict(size=11)))
+    fig.update_layout(**{**BG,"height":340},
+        title=dict(text="Active ticket status",font=dict(size=13,color="#555"),x=0,pad=dict(l=4)),
+        legend=dict(orientation="h",xanchor="center",x=0.5,yanchor="top",y=-0.04,font=dict(size=11)))
     st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
 
 with c2:
-    st.markdown(f"""
-    <div style="{CARD}padding:18px 20px;">
-      <span style="{LBL}">Active by request type</span>
-    </div>""", unsafe_allow_html=True)
     df_rt=pd.DataFrame(sorted(rc.items(),key=lambda x:x[1]),columns=["Type","Count"])
     fig2=px.bar(df_rt,x="Count",y="Type",orientation="h",
                 color_discrete_sequence=["#3B82F6"],text="Count")
     fig2.update_traces(textposition="outside",textfont_size=11)
-    fig2.update_layout(**BG,xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
-                       yaxis=dict(showgrid=False,title="",automargin=True))
+    fig2.update_layout(**{**BG,"height":340},
+        title=dict(text="Active by request type",font=dict(size=13,color="#555"),x=0,pad=dict(l=4)),
+        xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
+        yaxis=dict(showgrid=False,title="",automargin=True))
     st.plotly_chart(fig2,use_container_width=True,config={"displayModeBar":False})
 
 st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
@@ -232,31 +227,21 @@ rb_wk=resb(res_week); rb_mo=resb(res_mon)
 c3, c4 = st.columns(2)
 
 with c3:
-    st.markdown(f"""
-    <div style="{CARD}padding:18px 20px;">
-      <span style="{LBL}">Resolution reasons — this week ({len(res_week)} tickets)</span>
-    </div>""", unsafe_allow_html=True)
     if rb_wk:
         df_wk=pd.DataFrame(sorted(rb_wk.items(),key=lambda x:x[1])[-7:],columns=["Reason","Count"])
         fig3=px.bar(df_wk,x="Count",y="Reason",orientation="h",
                     color_discrete_sequence=["#0D9E75"],text="Count")
         fig3.update_traces(textposition="outside",textfont_size=11)
-        fig3.update_layout(**BG,xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
-                           yaxis=dict(showgrid=False,title=""))
+        fig3.update_layout(**BG,title=dict(text=f"Resolution reasons — this week ({len(res_week)} tickets)",font=dict(size=13,color="#555"),x=0,pad=dict(l=4)),xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),yaxis=dict(showgrid=False,title=""))
         st.plotly_chart(fig3,use_container_width=True,config={"displayModeBar":False})
 
 with c4:
-    st.markdown(f"""
-    <div style="{CARD}padding:18px 20px;">
-      <span style="{LBL}">Resolution reasons — this month ({len(res_mon)} tickets)</span>
-    </div>""", unsafe_allow_html=True)
     if rb_mo:
         df_mo=pd.DataFrame(sorted(rb_mo.items(),key=lambda x:x[1])[-8:],columns=["Reason","Count"])
         fig4=px.bar(df_mo,x="Count",y="Reason",orientation="h",
                     color_discrete_sequence=["#7C3AED"],text="Count")
         fig4.update_traces(textposition="outside",textfont_size=11)
-        fig4.update_layout(**BG,xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
-                           yaxis=dict(showgrid=False,title=""))
+        fig4.update_layout(**BG,title=dict(text=f"Resolution reasons — this month ({len(res_mon)} tickets)",font=dict(size=13,color="#555"),x=0,pad=dict(l=4)),xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),yaxis=dict(showgrid=False,title=""))
         st.plotly_chart(fig4,use_container_width=True,config={"displayModeBar":False})
 
 st.markdown("<hr style='border:none;border-top:1px solid #e8e6e0;margin:8px 0 14px'>",unsafe_allow_html=True)
