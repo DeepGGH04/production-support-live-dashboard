@@ -136,9 +136,9 @@ with st.form("rf"):
 st.markdown("""
 <style>
   div[data-testid="stForm"] {
-      position:relative; margin-top:-58px!important;
-      margin-left:calc(100% - 60px)!important;
-      width:44px!important; height:44px!important;
+      position:relative; margin-top:-52px!important;
+      margin-left:calc(100% - 48px)!important;
+      width:36px!important; height:36px!important;
       z-index:100;
   }
   div[data-testid="stForm"] > div { background:transparent!important; }
