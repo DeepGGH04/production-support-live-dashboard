@@ -22,10 +22,9 @@ st.markdown("""
   /* Refresh button */
   div[data-testid="stForm"] button{
       background:rgba(255,255,255,0.15)!important;color:white!important;
-      border:1px solid rgba(255,255,255,0.4)!important;border-radius:8px!important;
-      font-size:20px!important;height:44px!important;width:44px!important;
-      min-width:44px!important;padding:0!important;line-height:1!important;
-      display:flex!important;align-items:center!important;justify-content:center!important;
+      border:1px solid rgba(255,255,255,0.4)!important;border-radius:20px!important;
+      font-size:18px!important;height:34px!important;width:34px!important;
+      min-width:34px!important;padding:0!important;line-height:1!important;
   }
   div[data-testid="stForm"] button:hover{background:rgba(255,255,255,0.28)!important}
   div[data-testid="stForm"] > div {background:transparent!important}
@@ -122,7 +121,7 @@ st.markdown(f"""
   <div style="display:flex;align-items:center;gap:16px">
     <div style="background:#0D9E75;color:white;border-radius:20px;
                 padding:7px 18px;font-size:12px;font-weight:700;letter-spacing:.04em">
-      ● LIVE · GROUNDGAMEHEALTH
+<span style="color:#ff4444">●</span> LIVE · GROUNDGAMEHEALTH
     </div>
     <div id="refresh-placeholder"></div>
   </div>
@@ -137,7 +136,7 @@ with st.form("rf"):
 st.markdown("""
 <style>
   div[data-testid="stForm"] {
-      position:relative; margin-top:-68px!important;
+      position:relative; margin-top:-58px!important;
       margin-left:calc(100% - 60px)!important;
       width:44px!important; height:44px!important;
       z-index:100;
@@ -207,7 +206,7 @@ with c1:
         hole=0.58,textposition="inside",textinfo="percent",
         marker_colors=["#F59E0B","#9CA3AF","#3B82F6","#EF4444","#0D9E75","#8B5CF6","#14B8A6"]))
     fig.update_layout(**BG,
-        title=dict(text="ACTIVE TICKET STATUS",font=dict(size=11,color="#888",family="sans-serif"),
+        title=dict(text="ACTIVE TICKET STATUS",font=dict(size=11,color="#1a1a18",family="sans-serif"),
                    x=0,xanchor="left",pad=dict(l=4,t=4)),
         legend=dict(orientation="h",xanchor="center",x=0.5,yanchor="top",y=-0.04,font=dict(size=11)))
     st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
@@ -218,7 +217,7 @@ with c2:
                 color_discrete_sequence=["#3B82F6"],text="Count")
     fig2.update_traces(textposition="outside",textfont_size=11)
     fig2.update_layout(**BG,
-        title=dict(text="ACTIVE BY REQUEST TYPE",font=dict(size=11,color="#888",family="sans-serif"),
+        title=dict(text="ACTIVE BY REQUEST TYPE",font=dict(size=11,color="#1a1a18",family="sans-serif"),
                    x=0,xanchor="left",pad=dict(l=4,t=4)),
         xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
         yaxis=dict(showgrid=False,title="",automargin=True))
@@ -238,7 +237,7 @@ with c3:
         fig3.update_traces(textposition="outside",textfont_size=11)
         fig3.update_layout(**BG,
             title=dict(text=f"RESOLUTION REASONS — THIS WEEK ({len(res_week)} TICKETS)",
-                       font=dict(size=11,color="#888"),x=0,xanchor="left",pad=dict(l=4,t=4)),
+                       font=dict(size=11,color="#1a1a18"),x=0,xanchor="left",pad=dict(l=4,t=4)),
             xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
             yaxis=dict(showgrid=False,title=""))
         st.plotly_chart(fig3,use_container_width=True,config={"displayModeBar":False})
@@ -251,7 +250,7 @@ with c4:
         fig4.update_traces(textposition="outside",textfont_size=11)
         fig4.update_layout(**BG,
             title=dict(text=f"RESOLUTION REASONS — THIS MONTH ({len(res_mon)} TICKETS)",
-                       font=dict(size=11,color="#888"),x=0,xanchor="left",pad=dict(l=4,t=4)),
+                       font=dict(size=11,color="#1a1a18"),x=0,xanchor="left",pad=dict(l=4,t=4)),
             xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
             yaxis=dict(showgrid=False,title=""))
         st.plotly_chart(fig4,use_container_width=True,config={"displayModeBar":False})
