@@ -91,6 +91,7 @@ def load_data():
         fut={k:ex.submit(jql_fetch,q,lim) for k,(q,lim) in qs.items()}
         return {k:fut[k].result() for k in fut}
 
+JIRA_URL = "https://groundgamehealth.atlassian.net/browse/"
 now_str = datetime.now(ZoneInfo("America/New_York")).strftime("%d %b %Y, %H:%M EST")
 CARD = "background:white;border-radius:12px;border:1px solid #e8e6e0;padding:20px 24px;"
 BG   = dict(paper_bgcolor="white",plot_bgcolor="white",
@@ -236,20 +237,22 @@ with t1:
     st.markdown("<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1a1a18;margin:0 0 8px'>AGING BACKLOG — OLDEST OPEN TICKETS</p>", unsafe_allow_html=True)
     if aged:
         st.dataframe(pd.DataFrame([{
-            "Ticket":i["key"],"Summary":i.get("fields",{}).get("summary","")[:50],
+            "Ticket":f"{JIRA_URL}{i['key']}","Summary":i.get("fields",{}).get("summary","")[:50],
             "Age (d)":age(i),"Status":sname(i)} for i in aged[:7]]),
             use_container_width=True,hide_index=True,
-            column_config={"Ticket":st.column_config.TextColumn(width="small"),
-                           "Age (d)":st.column_config.NumberColumn(width="small")})
+            column_config={
+                "Ticket":st.column_config.LinkColumn("Ticket",width="small",display_text=r"(INC-\d+)"),
+                "Age (d)":st.column_config.NumberColumn(width="small")})
 
 with t2:
     st.markdown(f"<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1a1a18;margin:0 0 8px'>OPEN PRODUCTION BUGS ({len(bugs)})</p>", unsafe_allow_html=True)
     if bugs:
         st.dataframe(pd.DataFrame([{
-            "Ticket":b["key"],"Summary":b.get("fields",{}).get("summary","")[:48],
+            "Ticket":f"{JIRA_URL}{b['key']}","Summary":b.get("fields",{}).get("summary","")[:48],
             "Created":fdate(b.get("fields",{}).get("created",""))} for b in bugs]),
             use_container_width=True,hide_index=True,
-            column_config={"Ticket":st.column_config.TextColumn(width="small")})
+            column_config={
+                "Ticket":st.column_config.LinkColumn("Ticket",width="small",display_text=r"(INC-\d+)")})
     else:
         st.success("No open production bugs 🎉")
 
