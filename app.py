@@ -145,10 +145,10 @@ oa=age(oldest) if oldest else 0; ok=oldest["key"] if oldest else "N/A"
 # ── KPI cards ─────────────────────────────────────────────
 st.markdown("<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin:0 0 10px'>KEY METRICS AT A GLANCE</p>", unsafe_allow_html=True)
 for col,lbl,val,sub in zip(st.columns(4),[
-    "Active tickets","Resolved this week","Resolved this month","Oldest open ticket"],[
+    "Active tickets","Resolved this week","Resolved This Month","Oldest open ticket"],[
     str(len(active)),str(len(res_week)),str(len(res_mon)),f"{oa}d"],[
-    f'<span style="color:#C0392B;font-weight:600">+{created_today} today</span> &nbsp;·&nbsp; <span style="color:{nc};font-weight:600">{ns}{net}</span> since last week',
-    f'<span style="color:#888">avg {avg_weekly_resolved}/week this month</span>',"across all request types",
+    f'<span style="color:#C0392B;font-weight:600">+{created_today} Today</span> &nbsp;·&nbsp; <span style="color:{nc};font-weight:600">{ns}{net}</span> Since Last Week',
+    f'<span style="color:#888">avg {avg_weekly_resolved}/Week This Month</span>',"Across All Request Types",
     f'<span style="color:#C0392B;font-weight:600">{ok}</span>']):
     with col:
         st.markdown(f"""<div style="{CARD}">
