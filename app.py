@@ -48,10 +48,11 @@ def som20():
 def q_active():    return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution=EMPTY {NOISE}'
 def q_monday():    return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution=EMPTY AND createdDate<="{sow()}" {NOISE}'
 def q_created_today():
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
     return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND created>="{today} 00:00" {NOISE}'
-def q_res_week():  return f'project={PROJECT} AND resolved>="{som20()}" AND "Request Type" NOT IN ({EXCL}) AND issue>INC-9800 {NOISE}'
+def q_res_week():  return f'project={PROJECT} AND resolved>="{sow()}" AND "Request Type" NOT IN ({EXCL}) AND issue>INC-9800 {NOISE}'
 def q_res_month(): return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution!=EMPTY AND resolved>="{som()}" AND issue>INC-9800 {NOISE}'
+
 
 def jql_fetch(jql,limit=500):
     url=f"{JIRA_BASE}/rest/api/3/search/jql"
@@ -131,6 +132,12 @@ with st.spinner("Loading live data from Jira…"):
 active=data["active"]; monday=data["monday"]
 res_week=data["res_week"]; res_mon=data["res_month"]; bugs=data["bugs"]
 created_today=len(data["today"])
+# Avg weekly resolved this month = total resolved / weeks elapsed so far
+t_now = datetime.now(timezone.utc)
+month_start = t_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+days_elapsed = max((t_now - month_start).days, 1)
+weeks_elapsed = max(days_elapsed / 7, 1)
+avg_weekly_resolved = round(len(res_mon) / weeks_elapsed)
 net=len(active)-len(monday); ns="+" if net>=0 else ""; nc="#C0392B" if net>0 else "#27700F"
 aged=sorted(active,key=lambda i:-age(i)); oldest=aged[0] if aged else None
 oa=age(oldest) if oldest else 0; ok=oldest["key"] if oldest else "N/A"
@@ -141,7 +148,7 @@ for col,lbl,val,sub in zip(st.columns(4),[
     "Active tickets","Resolved this week","Resolved this month","Oldest open ticket"],[
     str(len(active)),str(len(res_week)),str(len(res_mon)),f"{oa}d"],[
     f'<span style="color:#C0392B;font-weight:600">+{created_today} today</span> &nbsp;·&nbsp; <span style="color:{nc};font-weight:600">{ns}{net}</span> since last week',
-    "tickets closed this week","across all request types",
+    f'<span style="color:#888">avg {avg_weekly_resolved}/week this month</span>',"across all request types",
     f'<span style="color:#C0392B;font-weight:600">{ok}</span>']):
     with col:
         st.markdown(f"""<div style="{CARD}">
