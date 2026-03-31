@@ -47,6 +47,9 @@ def som20():
 
 def q_active():    return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution=EMPTY {NOISE}'
 def q_monday():    return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution=EMPTY AND createdDate<="{sow()}" {NOISE}'
+def q_created_today():
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND created>="{today} 00:00" {NOISE}'
 def q_res_week():  return f'project={PROJECT} AND resolved>="{som20()}" AND "Request Type" NOT IN ({EXCL}) AND issue>INC-9800 {NOISE}'
 def q_res_month(): return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution!=EMPTY AND resolved>="{som()}" AND issue>INC-9800 {NOISE}'
 
@@ -86,7 +89,8 @@ def resb(issues):
 def load_data():
     qs={"active":(q_active(),500),"monday":(q_monday(),500),
         "res_week":(q_res_week(),500),"res_month":(q_res_month(),500),
-        "bugs":(f'project={PROJECT} AND status=PROD_BUG AND resolution=EMPTY',20)}
+        "bugs":(f'project={PROJECT} AND status=PROD_BUG AND resolution=EMPTY',20),
+        "today":(q_created_today(),100)}
     with ThreadPoolExecutor(max_workers=5) as ex:
         fut={k:ex.submit(jql_fetch,q,lim) for k,(q,lim) in qs.items()}
         return {k:fut[k].result() for k in fut}
@@ -126,6 +130,7 @@ with st.spinner("Loading live data from Jira…"):
 
 active=data["active"]; monday=data["monday"]
 res_week=data["res_week"]; res_mon=data["res_month"]; bugs=data["bugs"]
+created_today=len(data["today"])
 net=len(active)-len(monday); ns="+" if net>=0 else ""; nc="#C0392B" if net>0 else "#27700F"
 aged=sorted(active,key=lambda i:-age(i)); oldest=aged[0] if aged else None
 oa=age(oldest) if oldest else 0; ok=oldest["key"] if oldest else "N/A"
@@ -135,7 +140,7 @@ st.markdown("<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-
 for col,lbl,val,sub in zip(st.columns(4),[
     "Active tickets","Resolved this week","Resolved this month","Oldest open ticket"],[
     str(len(active)),str(len(res_week)),str(len(res_mon)),f"{oa}d"],[
-    f'<span style="color:{nc};font-weight:600">{ns}{net}</span> vs Monday ({len(monday)})',
+    f'<span style="color:#C0392B;font-weight:600">+{created_today} today</span> &nbsp;·&nbsp; <span style="color:{nc};font-weight:600">{ns}{net}</span> since last week',
     "tickets closed this week","across all request types",
     f'<span style="color:#C0392B;font-weight:600">{ok}</span>']):
     with col:
