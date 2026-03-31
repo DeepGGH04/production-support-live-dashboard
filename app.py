@@ -17,7 +17,6 @@ st.markdown("""
   #MainMenu,footer,header{visibility:hidden}
   .block-container{padding:1.2rem 2rem 2rem!important;max-width:100%!important}
   .stApp{background:#F4F3EF!important}
-
 </style>""", unsafe_allow_html=True)
 
 try:
@@ -42,8 +41,6 @@ SMAP   = {"Work InProgress":"Work In Progress","Work in progress":"Work In Progr
 def sow():
     t=datetime.now(timezone.utc); return (t-timedelta(days=t.weekday())).strftime("%Y-%m-%d 00:00")
 def som():  return datetime.now(timezone.utc).strftime("%Y-%m-01 00:00")
-def som20():
-    t=datetime.now(timezone.utc); return (t.replace(day=1)+timedelta(days=20)).strftime("%Y-%m-%d 00:00")
 
 def q_active():    return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution=EMPTY {NOISE}'
 def q_monday():    return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution=EMPTY AND createdDate<="{sow()}" {NOISE}'
@@ -52,7 +49,6 @@ def q_created_today():
     return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND created>="{today} 00:00" {NOISE}'
 def q_res_week():  return f'project={PROJECT} AND resolved>="{sow()}" AND "Request Type" NOT IN ({EXCL}) AND issue>INC-9800 {NOISE}'
 def q_res_month(): return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution!=EMPTY AND resolved>="{som()}" AND issue>INC-9800 {NOISE}'
-
 
 def jql_fetch(jql,limit=500):
     url=f"{JIRA_BASE}/rest/api/3/search/jql"
@@ -92,12 +88,12 @@ def load_data():
         "res_week":(q_res_week(),500),"res_month":(q_res_month(),500),
         "bugs":(f'project={PROJECT} AND status=PROD_BUG AND resolution=EMPTY',20),
         "today":(q_created_today(),100)}
-    with ThreadPoolExecutor(max_workers=5) as ex:
+    with ThreadPoolExecutor(max_workers=6) as ex:
         fut={k:ex.submit(jql_fetch,q,lim) for k,(q,lim) in qs.items()}
         return {k:fut[k].result() for k in fut}
 
 JIRA_URL = "https://groundgamehealth.atlassian.net/browse/"
-now_str = datetime.now(ZoneInfo("America/New_York")).strftime("%d %b %Y, %H:%M EST")
+now_str  = datetime.now(ZoneInfo("America/New_York")).strftime("%d %b %Y, %H:%M EST")
 CARD = "background:white;border-radius:12px;border:1px solid #e8e6e0;padding:20px 24px;"
 BG   = dict(paper_bgcolor="white",plot_bgcolor="white",
             margin=dict(t=44,b=10,l=10,r=24),height=320,
@@ -114,15 +110,11 @@ st.markdown(f"""
     </div>
     <div style="font-size:12px;color:#94A3B8;margin-top:4px">Last updated: {now_str}</div>
   </div>
-  <div style="display:flex;align-items:center;gap:16px">
-    <div style="background:#0D9E75;color:white;border-radius:20px;
-                padding:7px 18px;font-size:12px;font-weight:700;letter-spacing:.04em">
-<span style="color:#ff4444">●</span> LIVE · GROUNDGAMEHEALTH
-    </div>
+  <div style="background:#0D9E75;color:white;border-radius:20px;
+              padding:7px 18px;font-size:12px;font-weight:700;letter-spacing:.04em">
+    <span style="color:#ff4444">●</span> LIVE · GROUNDGAMEHEALTH
   </div>
 </div>""", unsafe_allow_html=True)
-
-
 
 # ── Load ──────────────────────────────────────────────────
 with st.spinner("Loading live data from Jira…"):
@@ -132,24 +124,34 @@ with st.spinner("Loading live data from Jira…"):
 active=data["active"]; monday=data["monday"]
 res_week=data["res_week"]; res_mon=data["res_month"]; bugs=data["bugs"]
 created_today=len(data["today"])
-# Avg weekly resolved this month = total resolved / weeks elapsed so far
 t_now = datetime.now(timezone.utc)
-month_start = t_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-days_elapsed = max((t_now - month_start).days, 1)
-weeks_elapsed = max(days_elapsed / 7, 1)
-avg_weekly_resolved = round(len(res_mon) / weeks_elapsed)
+month_start = t_now.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
+days_elapsed = max((t_now-month_start).days,1)
+weeks_elapsed = max(days_elapsed/7,1)
+avg_weekly_resolved = round(len(res_mon)/weeks_elapsed)
 net=len(active)-len(monday); ns="+" if net>=0 else ""; nc="#C0392B" if net>0 else "#27700F"
 aged=sorted(active,key=lambda i:-age(i)); oldest=aged[0] if aged else None
 oa=age(oldest) if oldest else 0; ok=oldest["key"] if oldest else "N/A"
 
-# ── KPI cards ─────────────────────────────────────────────
+# ── KPI cards (5 columns) ─────────────────────────────────
 st.markdown("<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin:0 0 10px'>KEY METRICS AT A GLANCE</p>", unsafe_allow_html=True)
-for col,lbl,val,sub in zip(st.columns(4),[
-    "Active tickets","Resolved this week","Resolved This Month","Oldest open ticket"],[
-    str(len(active)),str(len(res_week)),str(len(res_mon)),f"{oa}d"],[
-    f'<span style="color:#C0392B;font-weight:600">+{created_today} Today</span> &nbsp;·&nbsp; <span style="color:{nc};font-weight:600">{ns}{net}</span> Since Last Week',
-    f'<span style="color:#888">Avg {avg_weekly_resolved}/Week This Month</span>',"Across All Request Types",
-    f'<span style="color:#C0392B;font-weight:600">{ok}</span>']):
+
+k1,k2,k3,k4,k5 = st.columns(5)
+
+kpis = [
+    (k1, "Active Tickets",          str(len(active)),
+         f'<span style="color:#C0392B;font-weight:600">+{created_today} Today</span> &nbsp;·&nbsp; <span style="color:{nc};font-weight:600">{ns}{net}</span> Since Last Week'),
+    (k2, "Resolved This Week",      str(len(res_week)),
+         "Tickets Closed This Week"),
+    (k3, "Avg Resolved / Week",     str(avg_weekly_resolved),
+         "Weekly Avg This Month"),
+    (k4, "Resolved This Month",     str(len(res_mon)),
+         "Across All Request Types"),
+    (k5, "Oldest Open Ticket",      f"{oa}d",
+         f'<span style="color:#C0392B;font-weight:600">{ok}</span>'),
+]
+
+for col,lbl,val,sub in kpis:
     with col:
         st.markdown(f"""<div style="{CARD}">
           <div style="font-size:13px;color:#888;margin-bottom:8px">{lbl}</div>
@@ -164,9 +166,9 @@ st.markdown("<p style='font-size:11px;font-weight:700;letter-spacing:.08em;text-
 trend="Triage session recommended." if net>5 else "Backlog is stable."
 bmsg=f"{len(bugs)} active production bug{'s' if len(bugs)!=1 else ''} in the backlog. Requires sprint commitment." if bugs else "No open production bugs 🎉"
 for col,(bc,tc,title,body) in zip(st.columns(3),[
-    ("#EF4444","#991B1B","Backlog trend",  f"Net {ns}{net} tickets this week — active count is {len(active)}. {trend}"),
-    ("#F59E0B","#92400E","Aging tickets",  f"Oldest open ticket is {oa} days old ({ok}). Review tickets aged over 60 days."),
-    ("#3B82F6","#1E40AF","Production bugs",bmsg)]):
+    ("#EF4444","#991B1B","Backlog Trend",  f"Net {ns}{net} tickets this week — active count is {len(active)}. {trend}"),
+    ("#F59E0B","#92400E","Aging Tickets",  f"Oldest open ticket is {oa} days old ({ok}). Review tickets aged over 60 days."),
+    ("#3B82F6","#1E40AF","Production Bugs",bmsg)]):
     with col:
         st.markdown(f"""<div style="background:white;border-left:4px solid {bc};
           border-top:1px solid #e8e6e0;border-right:1px solid #e8e6e0;
@@ -227,6 +229,11 @@ with c3:
             xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
             yaxis=dict(showgrid=False,title=""))
         st.plotly_chart(fig3,use_container_width=True,config={"displayModeBar":False})
+    else:
+        st.markdown(f"""<div style="{CARD}text-align:center;padding:40px">
+          <div style="font-size:11px;color:#888">RESOLUTION REASONS — THIS WEEK</div>
+          <div style="font-size:14px;color:#aaa;margin-top:12px">No tickets resolved yet this week</div>
+        </div>""", unsafe_allow_html=True)
 
 with c4:
     if rb_mo:
