@@ -148,7 +148,7 @@ for col,lbl,val,sub in zip(st.columns(4),[
     "Active tickets","Resolved this week","Resolved This Month","Oldest open ticket"],[
     str(len(active)),str(len(res_week)),str(len(res_mon)),f"{oa}d"],[
     f'<span style="color:#C0392B;font-weight:600">+{created_today} Today</span> &nbsp;·&nbsp; <span style="color:{nc};font-weight:600">{ns}{net}</span> Since Last Week',
-    f'<span style="color:#888">avg {avg_weekly_resolved}/Week This Month</span>',"Across All Request Types",
+    f'<span style="color:#888">Avg {avg_weekly_resolved}/Week This Month</span>',"Across All Request Types",
     f'<span style="color:#C0392B;font-weight:600">{ok}</span>']):
     with col:
         st.markdown(f"""<div style="{CARD}">
