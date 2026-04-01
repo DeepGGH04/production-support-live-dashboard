@@ -38,9 +38,10 @@ EXCL = ('EMPTY,"Absorb Support (INC)","New Implify/dialer Enhancements (INC)",'
 NOISE  = 'AND summary !~ "Daily checkout" AND summary !~ "IMPLIFY Training" AND summary !~ "Grafana"'
 SMAP   = {"Work InProgress":"Work In Progress","Work in progress":"Work In Progress","TODO":"To Do"}
 
+EST = ZoneInfo("America/New_York")
 def sow():
-    t=datetime.now(timezone.utc); return (t-timedelta(days=t.weekday())).strftime("%Y-%m-%d 00:00")
-def som():  return datetime.now(timezone.utc).strftime("%Y-%m-01 00:00")
+    t=datetime.now(EST); return (t-timedelta(days=t.weekday())).strftime("%Y-%m-%d 00:00")
+def som():  return datetime.now(EST).strftime("%Y-%m-01 00:00")
 
 def q_active():    return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution=EMPTY {NOISE}'
 def q_monday():    return f'project={PROJECT} AND "Request Type" NOT IN ({EXCL}) AND resolution=EMPTY AND createdDate<="{sow()}" {NOISE}'
@@ -67,9 +68,9 @@ def sname(i):
     raw=i.get("fields",{}).get("status",{}).get("name","?"); return SMAP.get(raw,raw)
 def age(i):
     c=i.get("fields",{}).get("created","")
-    return (datetime.now(timezone.utc)-datetime.fromisoformat(c.replace("Z","+00:00"))).days if c else 0
+    return (datetime.now(EST)-datetime.fromisoformat(c.replace("Z","+00:00")).astimezone(EST)).days if c else 0
 def fdate(iso):
-    try: return datetime.fromisoformat(iso.replace("Z","+00:00")).strftime("%d %b") if iso else ""
+    try: return datetime.fromisoformat(iso.replace("Z","+00:00")).astimezone(EST).strftime("%d %b") if iso else ""
     except: return ""
 def get_rt(i):
     f=i.get("fields",{}).get("customfield_10010") or {}
@@ -93,7 +94,7 @@ def load_data():
         return {k:fut[k].result() for k in fut}
 
 JIRA_URL = "https://groundgamehealth.atlassian.net/browse/"
-now_str  = datetime.now(ZoneInfo("America/New_York")).strftime("%d %b %Y, %H:%M EST")
+now_str  = datetime.now(EST).strftime("%d %b %Y, %H:%M EST")
 CARD = "background:white;border-radius:12px;border:1px solid #e8e6e0;padding:20px 24px;"
 BG   = dict(paper_bgcolor="white",plot_bgcolor="white",
             margin=dict(t=44,b=10,l=10,r=24),height=320,
@@ -124,8 +125,8 @@ with st.spinner("Loading live data from Jira…"):
 active=data["active"]; monday=data["monday"]
 res_week=data["res_week"]; res_mon=data["res_month"]; bugs=data["bugs"]
 created_today=len(data["today"])
-t_now = datetime.now(timezone.utc)
-month_start = t_now.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
+t_now = datetime.now(EST)
+month_start = t_now.replace(day=1,hour=0,minute=0,second=0,microsecond=0,tzinfo=EST)
 days_elapsed = max((t_now-month_start).days,1)
 weeks_elapsed = max(days_elapsed/7,1)
 avg_weekly_resolved = round(len(res_mon)/weeks_elapsed)
