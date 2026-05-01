@@ -139,7 +139,7 @@ st.markdown(f"""
     <div style="font-size:12px;color:#94A3B8;margin-top:4px">Last updated: {now_str}</div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
-    <a href="./Deep_Dive" style="background:rgba(255,255,255,0.12);color:white;
+    <a href="/Deep_Dive" style="background:rgba(255,255,255,0.12);color:white;
        border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:7px 16px;
        font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">
       🔍 Deep Dive
