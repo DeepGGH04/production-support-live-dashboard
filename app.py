@@ -359,23 +359,39 @@ with tab2:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
     # 30-day backlog trend
+    # Add 7-day rolling avg
+    df_trend["Created_MA7"]  = df_trend["Created"].rolling(7,min_periods=1).mean().round(1)
+    df_trend["Resolved_MA7"] = df_trend["Resolved"].rolling(7,min_periods=1).mean().round(1)
+
     fig_trend=go.Figure()
-    fig_trend.add_trace(go.Scatter(
+    fig_trend.add_trace(go.Bar(
         x=df_trend["Date"],y=df_trend["Created"],
-        name="Created",mode="lines+markers",
-        line=dict(color="#EF4444",width=2),marker=dict(size=5)))
-    fig_trend.add_trace(go.Scatter(
+        name="Created",marker_color="#FCA5A5",opacity=0.6,
+        hovertemplate="%{x}<br><b>Created: %{y}</b><extra></extra>"))
+    fig_trend.add_trace(go.Bar(
         x=df_trend["Date"],y=df_trend["Resolved"],
-        name="Resolved",mode="lines+markers",
-        line=dict(color="#0D9E75",width=2),marker=dict(size=5)))
+        name="Resolved",marker_color="#6EE7B7",opacity=0.6,
+        hovertemplate="%{x}<br><b>Resolved: %{y}</b><extra></extra>"))
+    fig_trend.add_trace(go.Scatter(
+        x=df_trend["Date"],y=df_trend["Created_MA7"],
+        name="Created 7d avg",mode="lines",
+        line=dict(color="#EF4444",width=2.5,dash="dot"),
+        hovertemplate="%{x}<br>7d avg created: %{y}<extra></extra>"))
+    fig_trend.add_trace(go.Scatter(
+        x=df_trend["Date"],y=df_trend["Resolved_MA7"],
+        name="Resolved 7d avg",mode="lines",
+        line=dict(color="#0D9E75",width=2.5,dash="dot"),
+        hovertemplate="%{x}<br>7d avg resolved: %{y}<extra></extra>"))
     fig_trend.update_layout(
         paper_bgcolor="white",plot_bgcolor="white",
-        height=300,margin=dict(t=44,b=20,l=10,r=10),
+        barmode="group",height=320,margin=dict(t=44,b=20,l=10,r=10),
         font=dict(family="sans-serif",size=12,color="#475569"),
         title=dict(text="DAILY TICKET CREATION VS CLOSURE — LAST 30 DAYS",font=dict(size=11,color="#1a1a18"),x=0,xanchor="left",pad=dict(l=4,t=4)),
-        legend=dict(orientation="h",x=1,xanchor="right",y=1.12),
+        legend=dict(orientation="h",x=1,xanchor="right",y=1.12,font=dict(size=10)),
         xaxis=dict(showgrid=False,tickangle=-30,tickfont=dict(size=10)),
-        yaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""))
+        yaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
+        hovermode="x unified",
+        hoverlabel=dict(bgcolor="white",bordercolor="#e8e6e0",font_size=12))
     st.plotly_chart(fig_trend,use_container_width=True,config={"displayModeBar":False})
 
     st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
@@ -449,16 +465,22 @@ with tab3:
     with c7:
         if assignee_counts:
             df_asgn=pd.DataFrame(sorted(assignee_counts.items(),key=lambda x:x[1]),columns=["Assignee","Active Tickets"])
+            total_a = df_asgn["Active Tickets"].sum() or 1
+            df_asgn["Pct"] = (df_asgn["Active Tickets"]/total_a*100).round(1)
             fig_asgn=px.bar(df_asgn,x="Active Tickets",y="Assignee",orientation="h",
-                            color_discrete_sequence=["#3B82F6"],text="Active Tickets")
-            fig_asgn.update_traces(textposition="outside",textfont_size=11)
+                            color="Active Tickets",color_continuous_scale=["#BFDBFE","#3B82F6","#1E40AF"],
+                            text="Active Tickets",custom_data=["Pct"])
+            fig_asgn.update_traces(textposition="outside",textfont_size=11,
+                hovertemplate="<b>%{y}</b><br>%{x} active tickets (%{customdata[0]}% of backlog)<extra></extra>")
             fig_asgn.update_layout(
                 paper_bgcolor="white",plot_bgcolor="white",
-                height=360,margin=dict(t=44,b=10,l=10,r=10),
+                height=max(320,len(assignee_counts)*32+80),margin=dict(t=44,b=10,l=10,r=10),
                 font=dict(family="sans-serif",size=12,color="#475569"),
                 title=dict(text="ACTIVE TICKETS BY ASSIGNEE",font=dict(size=11,color="#1a1a18"),x=0,xanchor="left",pad=dict(l=4,t=4)),
+                coloraxis_showscale=False,
                 xaxis=dict(showgrid=True,gridcolor="#F0EEEA",title=""),
-                yaxis=dict(showgrid=False,title="",automargin=True))
+                yaxis=dict(showgrid=False,title="",automargin=True),
+                hoverlabel=dict(bgcolor="white",bordercolor="#e8e6e0",font_size=12))
             st.plotly_chart(fig_asgn,use_container_width=True,config={"displayModeBar":False})
 
     with c8:
