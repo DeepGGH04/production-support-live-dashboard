@@ -138,9 +138,16 @@ st.markdown(f"""
     </div>
     <div style="font-size:12px;color:#94A3B8;margin-top:4px">Last updated: {now_str}</div>
   </div>
-  <div style="background:#0D9E75;color:white;border-radius:20px;
-              padding:7px 18px;font-size:12px;font-weight:700;letter-spacing:.04em">
-    <span style="color:#ff4444">●</span> LIVE · GROUNDGAMEHEALTH
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="./Deep_Dive" style="background:rgba(255,255,255,0.12);color:white;
+       border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:7px 16px;
+       font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">
+      🔍 Deep Dive
+    </a>
+    <div style="background:#0D9E75;color:white;border-radius:20px;
+                padding:7px 18px;font-size:12px;font-weight:700;letter-spacing:.04em">
+      <span style="color:#ff4444">●</span> LIVE · GROUNDGAMEHEALTH
+    </div>
   </div>
 </div>""", unsafe_allow_html=True)
 
@@ -148,7 +155,7 @@ st.markdown(f"""
 _, nav_col = st.columns([9, 1])
 with nav_col:
     if st.button("🔍 Deep Dive", use_container_width=True):
-        st.switch_page("pages/2_Deep_Dive.py")
+        st.switch_page("pages/2_Deep_Dive.py") if hasattr(st, "switch_page") else st.markdown("👉 Use the sidebar to navigate to Deep Dive")
 st.markdown("""
 <style>
   /* Style the Deep Dive button to look like a nav pill */
