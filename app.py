@@ -151,28 +151,6 @@ st.markdown(f"""
   </div>
 </div>""", unsafe_allow_html=True)
 
-# ── Deep Dive nav button (native Streamlit) ──────────────
-_, nav_col = st.columns([9, 1])
-with nav_col:
-    if st.button("🔍 Deep Dive", use_container_width=True):
-        st.switch_page("pages/2_Deep_Dive.py") if hasattr(st, "switch_page") else st.markdown("👉 Use the sidebar to navigate to Deep Dive")
-st.markdown("""
-<style>
-  /* Style the Deep Dive button to look like a nav pill */
-  div[data-testid="stButton"] > button {
-      background: #1E3A6E !important;
-      color: white !important;
-      border: 1px solid rgba(255,255,255,0.2) !important;
-      border-radius: 8px !important;
-      font-size: 12px !important;
-      font-weight: 600 !important;
-      margin-top: -60px !important;
-  }
-  div[data-testid="stButton"] > button:hover {
-      background: #2a4f96 !important;
-  }
-</style>""", unsafe_allow_html=True)
-
 # ── Load ──────────────────────────────────────────────────
 with st.spinner("Loading live data from Jira…"):
     try: data=load_data()
