@@ -138,18 +138,33 @@ st.markdown(f"""
     </div>
     <div style="font-size:12px;color:#94A3B8;margin-top:4px">Last updated: {now_str}</div>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <a href="/Deep_Dive" target="_self" style="background:rgba(255,255,255,0.12);color:white;
-       border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:7px 16px;
-       font-size:12px;font-weight:600;text-decoration:none;letter-spacing:.02em">
-      🔍 Deep Dive
-    </a>
-    <div style="background:#0D9E75;color:white;border-radius:20px;
-                padding:7px 18px;font-size:12px;font-weight:700;letter-spacing:.04em">
-      <span style="color:#ff4444">●</span> LIVE · GROUNDGAMEHEALTH
-    </div>
+  <div style="background:#0D9E75;color:white;border-radius:20px;
+              padding:7px 18px;font-size:12px;font-weight:700;letter-spacing:.04em">
+    <span style="color:#ff4444">●</span> LIVE · GROUNDGAMEHEALTH
   </div>
 </div>""", unsafe_allow_html=True)
+
+# ── Deep Dive nav button (native Streamlit) ──────────────
+_, nav_col = st.columns([9, 1])
+with nav_col:
+    if st.button("🔍 Deep Dive", use_container_width=True):
+        st.switch_page("pages/2_Deep_Dive.py")
+st.markdown("""
+<style>
+  /* Style the Deep Dive button to look like a nav pill */
+  div[data-testid="stButton"] > button {
+      background: #1E3A6E !important;
+      color: white !important;
+      border: 1px solid rgba(255,255,255,0.2) !important;
+      border-radius: 8px !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      margin-top: -60px !important;
+  }
+  div[data-testid="stButton"] > button:hover {
+      background: #2a4f96 !important;
+  }
+</style>""", unsafe_allow_html=True)
 
 # ── Load ──────────────────────────────────────────────────
 with st.spinner("Loading live data from Jira…"):
