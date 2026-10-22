@@ -394,14 +394,20 @@ summary  = metrics_mod.generate_executive_summary(fdf, kpis, monthly, payer_m, d
 # Drill-down mapping — maps a KPI key → (display label, filter function)
 # -----------------------------------------------------------------------------
 DRILLS = {
-    "paid":          ("Paid Claims",         lambda d: d[d["is_paid"]]),
-    "denied":        ("Denied Claims",       lambda d: d[d["is_denied"]]),
-    "pending":       ("Pending Claims",      lambda d: d[d["is_pending"]]),
-    "resubmitted":   ("Resubmitted Claims",
-                      lambda d: d[d["claim_status_normalized"].eq("Resubmitted")]),
-    "not_submitted": ("Not Submitted",       lambda d: d[~d["in_tracker"]]),
-    "outstanding":   ("Outstanding Claims",  lambda d: d[d["is_outstanding"]]),
-    "declined":      ("Declined at Provider",lambda d: d[d["is_declined_at_provider"]]),
+    "submitted":        ("Claims Submitted",
+                         lambda d: d[d["is_submitted"]]),
+    "yet_to_submit":    ("Yet to Submit (not in Revenue Tracker)",
+                         lambda d: d[~d["in_tracker"]]),
+    "paid":             ("Paid Claims",
+                         lambda d: d[d["is_paid"]]),
+    "denied":           ("Denied Claims",
+                         lambda d: d[d["is_denied"]]),
+    "declined":         ("Declined at Provider",
+                         lambda d: d[d["is_declined_at_provider"]]),
+    "outstanding_sub":  ("Outstanding — Submitted (not Paid, not Denied)",
+                         lambda d: d[d["in_tracker"] & ~d["is_paid"] & ~d["is_denied"]]),
+    "outstanding_yet":  ("Outstanding — Yet to Submit",
+                         lambda d: d[~d["in_tracker"]]),
 }
 
 
@@ -451,30 +457,17 @@ with st.container(border=True):
                 unsafe_allow_html=True)
     v = st.columns(4)
     static_kpi(v[0], "Total SuperBills",
-               f"{kpis['total_superbills']:,}", "blue")
-    static_kpi(v[1], "Total Charge Amount",
-               f"${kpis['total_charge_amount']:,.2f}", "blue")
-    static_kpi(v[2], "Claims Submitted",
-               f"{kpis['total_submitted']:,}", "blue",
-               f"Submission Rate: {kpis['submission_rate']:.1f}%")
-    clickable_kpi(v[3], "not_submitted", "Not Submitted",
-                  f"{kpis['not_submitted_claims']:,}", "orange")
-
-    # FINANCIAL & FOLLOW-UP
-    st.markdown('<div class="kpi-section-label">FINANCIAL &amp; FOLLOW-UP</div>',
-                unsafe_allow_html=True)
-    f = st.columns(4)
-    static_kpi(f[0], "Charges — Paid Claims",
-               f"${kpis['charges_paid']:,.2f}", "green",
-               "Not revenue collected")
-    static_kpi(f[1], "Charges — Denied",
-               f"${kpis['charges_denied']:,.2f}", "red")
-    clickable_kpi(f[2], "outstanding", "Outstanding Charges",
-                  f"${kpis['outstanding_charge']:,.2f}", "amber",
-                  "Pending / Denied / Resubmitted")
-    clickable_kpi(f[3], "declined", "Declined at Provider",
-                  f"{kpis['declined_at_provider_claims']:,}", "gray",
-                  f"${kpis['charges_declined_at_provider']:,.2f}")
+               f"{kpis['total_superbills']:,}", "blue",
+               "Distinct NPI × SuperBill ID")
+    static_kpi(v[1], "Total Billable Items",
+               f"{kpis['total_billable_items']:,}", "blue",
+               f"${kpis['total_charge_amount']:,.2f} charged")
+    clickable_kpi(v[2], "submitted", "Claims Submitted",
+                  f"{kpis['total_submitted']:,}", "blue",
+                  f"Submission Rate: {kpis['submission_rate']:.1f}%")
+    clickable_kpi(v[3], "yet_to_submit", "Yet to Submit",
+                  f"{kpis['yet_to_submit_count']:,}", "orange",
+                  "Not in Revenue Tracker")
 
     # CLAIM OUTCOMES
     st.markdown('<div class="kpi-section-label">CLAIM OUTCOMES</div>',
@@ -486,21 +479,41 @@ with st.container(border=True):
     clickable_kpi(o[1], "denied", "Denied Claims",
                   f"{kpis['denied_claims']:,}", "red",
                   f"Denial Rate: {kpis['denial_rate']:.1f}%")
-    clickable_kpi(o[2], "pending", "Pending Claims",
-                  f"{kpis['pending_claims']:,}", "gray")
-    clickable_kpi(o[3], "resubmitted", "Resubmitted",
-                  f"{kpis['resubmitted_claims']:,}", "purple")
+    clickable_kpi(o[2], "declined", "Declined at Provider",
+                  f"{kpis['declined_at_provider_claims']:,}", "gray",
+                  f"${kpis['charges_declined_at_provider']:,.2f}")
+    static_kpi(o[3], "Pending Claims",
+               f"{kpis['pending_claims']:,}", "gray",
+               "Awaiting payer adjudication")
+
+    # FINANCIAL & FOLLOW-UP
+    st.markdown('<div class="kpi-section-label">FINANCIAL &amp; FOLLOW-UP</div>',
+                unsafe_allow_html=True)
+    f = st.columns(4)
+    static_kpi(f[0], "Charges — Paid Claims",
+               f"${kpis['charges_paid']:,.2f}", "green",
+               "Not revenue collected")
+    static_kpi(f[1], "Charges — Denied",
+               f"${kpis['charges_denied']:,.2f}", "red")
+    clickable_kpi(f[2], "outstanding_sub", "Outstanding — Submitted",
+                  f"${kpis['outstanding_sub_charges']:,.2f}", "amber",
+                  f"{kpis['outstanding_sub_count']:,} claims · not Paid / not Denied")
+    clickable_kpi(f[3], "outstanding_yet", "Outstanding — Yet to Submit",
+                  f"${kpis['yet_to_submit_charges']:,.2f}", "orange",
+                  f"{kpis['yet_to_submit_count']:,} SuperBills not in Tracker")
 
     with st.expander("KPI definitions"):
         st.markdown("""
-- **Total SuperBills** — count of SuperBill rows.
+- **Total SuperBills** — distinct count of (Billing Provider NPI × SuperBill ID) in the SuperBill file.
+- **Total Billable Items** — count of all SuperBill rows after filters.
 - **Total Charge Amount** — sum of Charge Amount. **Not** collected revenue.
 - **Claims Submitted** — tracker status is Paid / Denied / Pending / Resubmitted / Rejected.
-- **Submission Rate** — Claims Submitted ÷ Total SuperBills.
+- **Submission Rate** — Claims Submitted ÷ Total Billable Items.
 - **Paid / Denial Rate** — of submitted claims only.
-- **Not Submitted** — SuperBills with no matching Revenue Tracker row.
-- **Outstanding Charges** — charges on submitted claims that are not Paid and not Rejected.
-- **Declined at Provider** — provider chose not to bill; not counted as Not Submitted.
+- **Yet to Submit** — SuperBills with no matching Revenue Tracker row.
+- **Outstanding — Submitted** — in both files, not Paid and not Denied.
+- **Outstanding — Yet to Submit** — total charges on SuperBills that haven't reached the Tracker.
+- **Declined at Provider** — provider chose not to bill; not counted as Yet to Submit.
 """)
 
 

@@ -77,25 +77,52 @@ def _safe_div(n, d):
 
 def calculate_kpis(df: pd.DataFrame) -> dict:
     s = df["claim_status_normalized"]
-    total_sb = int(len(df))
+
+    # Total SuperBills: distinct (Billing Provider NPI, SuperBill ID) pairs.
+    # Falls back to row count when the NPI column isn't present.
+    if "Billing Provider NPI" in df.columns:
+        total_superbills_distinct = int(
+            df.drop_duplicates(
+                subset=["Billing Provider NPI", "superbill_id_clean"]
+            ).shape[0]
+        )
+    else:
+        total_superbills_distinct = int(len(df))
+
+    total_billable_items = int(len(df))
     total_charge = float(df["charge_amount_clean"].sum(skipna=True))
+
     submitted            = int(df["is_submitted"].sum())
     paid                 = int(df["is_paid"].sum())
     denied               = int(df["is_denied"].sum())
     pending              = int(df["is_pending"].sum())
     resubmitted          = int(s.eq("Resubmitted").sum())
     rejected             = int(df["is_rejected"].sum())
-    not_submitted        = int((~df["in_tracker"]).sum())
+    yet_to_submit        = int((~df["in_tracker"]).sum())
     declined_at_provider = int(df["is_declined_at_provider"].sum())
 
-    outstanding_mask = df["is_outstanding"]
-    outstanding_charge = float(df.loc[outstanding_mask, "charge_amount_clean"].sum(skipna=True))
+    # NEW outstanding split:
+    #   Outstanding — Submitted  = in both files AND not Paid AND not Denied
+    #   Outstanding — Yet to Submit = NOT in tracker
+    outstanding_sub_mask = df["in_tracker"] & ~df["is_paid"] & ~df["is_denied"]
+    outstanding_sub_count   = int(outstanding_sub_mask.sum())
+    outstanding_sub_charges = float(
+        df.loc[outstanding_sub_mask, "charge_amount_clean"].sum(skipna=True)
+    )
+    yet_to_submit_charges = float(
+        df.loc[~df["in_tracker"], "charge_amount_clean"].sum(skipna=True)
+    )
 
     return {
-        "total_superbills":            total_sb,
+        # Volume
+        "total_superbills":            total_superbills_distinct,
+        "total_billable_items":        total_billable_items,
         "total_charge_amount":         round(total_charge, 2),
         "total_submitted":             submitted,
-        "submission_rate":             round(100 * _safe_div(submitted, total_sb), 2),
+        "submission_rate":             round(100 * _safe_div(submitted, total_billable_items), 2),
+        "yet_to_submit_count":         yet_to_submit,
+
+        # Outcomes
         "paid_claims":                 paid,
         "paid_rate":                   round(100 * _safe_div(paid, submitted), 2),
         "denied_claims":               denied,
@@ -103,16 +130,23 @@ def calculate_kpis(df: pd.DataFrame) -> dict:
         "pending_claims":              pending,
         "resubmitted_claims":          resubmitted,
         "rejected_claims":             rejected,
-        "not_submitted_claims":        not_submitted,
         "declined_at_provider_claims": declined_at_provider,
-        "outstanding_charge":          round(outstanding_charge, 2),
-        "missing_from_tracker":        not_submitted,
-        "charges_paid":                round(float(df.loc[df["is_paid"],                 "charge_amount_clean"].sum(skipna=True)), 2),
-        "charges_denied":              round(float(df.loc[df["is_denied"],               "charge_amount_clean"].sum(skipna=True)), 2),
-        "charges_pending":             round(float(df.loc[df["is_pending"],              "charge_amount_clean"].sum(skipna=True)), 2),
-        "charges_submitted":           round(float(df.loc[df["is_submitted"],            "charge_amount_clean"].sum(skipna=True)), 2),
-        "charges_not_submitted":       round(float(df.loc[~df["in_tracker"],             "charge_amount_clean"].sum(skipna=True)), 2),
+
+        # Financial
+        "charges_paid":                round(float(df.loc[df["is_paid"],   "charge_amount_clean"].sum(skipna=True)), 2),
+        "charges_denied":              round(float(df.loc[df["is_denied"], "charge_amount_clean"].sum(skipna=True)), 2),
+        "charges_pending":             round(float(df.loc[df["is_pending"],"charge_amount_clean"].sum(skipna=True)), 2),
+        "charges_submitted":           round(float(df.loc[df["is_submitted"], "charge_amount_clean"].sum(skipna=True)), 2),
+        "outstanding_sub_count":       outstanding_sub_count,
+        "outstanding_sub_charges":     round(outstanding_sub_charges, 2),
+        "yet_to_submit_charges":       round(yet_to_submit_charges, 2),
         "charges_declined_at_provider":round(float(df.loc[df["is_declined_at_provider"], "charge_amount_clean"].sum(skipna=True)), 2),
+
+        # Back-compat aliases (so older callers / summary logic still work)
+        "not_submitted_claims":        yet_to_submit,
+        "missing_from_tracker":        yet_to_submit,
+        "outstanding_charge":          round(outstanding_sub_charges + yet_to_submit_charges, 2),
+        "charges_not_submitted":       round(yet_to_submit_charges, 2),
     }
 
 
@@ -265,13 +299,15 @@ def calculate_data_quality(df: pd.DataFrame, orphan: pd.DataFrame, dup_info: dic
 def generate_executive_summary(df: pd.DataFrame, kpis: dict, monthly: dict,
                                payer: dict, dq: dict) -> List[str]:
     out = []
-    total = kpis["total_superbills"]
-    if total == 0:
+    total_items = kpis["total_billable_items"]
+    if total_items == 0:
         return ["No SuperBills in the current view."]
 
     out.append(
-        f"{kpis['submission_rate']:.1f}% of {total:,} SuperBills have been submitted "
-        f"({kpis['total_submitted']:,} submitted, {kpis['not_submitted_claims']:,} not submitted)."
+        f"{kpis['total_superbills']:,} distinct SuperBills (by NPI × SB ID) across "
+        f"{total_items:,} billable items. "
+        f"{kpis['submission_rate']:.1f}% submitted "
+        f"({kpis['total_submitted']:,} submitted, {kpis['yet_to_submit_count']:,} yet to submit)."
     )
     if kpis["total_submitted"] > 0:
         out.append(
@@ -279,10 +315,11 @@ def generate_executive_summary(df: pd.DataFrame, kpis: dict, monthly: dict,
             f"{kpis['denial_rate']:.1f}% of submitted claims."
         )
 
-    if kpis["outstanding_charge"] > 0:
+    if kpis["outstanding_sub_charges"] > 0 or kpis["yet_to_submit_charges"] > 0:
         out.append(
-            f"${kpis['outstanding_charge']:,.2f} in charges remain unresolved "
-            f"(not Paid, not Rejected)."
+            f"${kpis['outstanding_sub_charges']:,.2f} outstanding on submitted claims "
+            f"(not Paid, not Denied); "
+            f"${kpis['yet_to_submit_charges']:,.2f} still to submit."
         )
 
     aged = df[df["is_outstanding"] & df["days_since_generated"].fillna(0).ge(91)]
