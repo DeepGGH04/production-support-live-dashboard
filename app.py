@@ -1,6 +1,6 @@
 """
 Revenue Cycle Dashboard — Streamlit edition.
-Branded header + color-coded KPI tiles matching the Flask original.
+Branded header, color-coded KPI tiles, and drill-down from KPI → raw rows.
 """
 from datetime import datetime
 from io import StringIO
@@ -24,11 +24,10 @@ st.set_page_config(
 
 
 # -----------------------------------------------------------------------------
-# Custom styling — dark header, grouped color-coded KPI tiles.
+# Custom styling
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
-/* Dark header strip */
 .gg-header {
     background: #0F172A;
     color: #FFFFFF;
@@ -40,7 +39,6 @@ st.markdown("""
 .gg-header .meta { color: #94A3B8; font-size: 12.5px; margin-top: 6px; }
 .gg-header .meta b { color: #E2E8F0; }
 
-/* KPI section labels */
 .kpi-section-label {
     text-transform: uppercase;
     font-size: 11px;
@@ -50,14 +48,13 @@ st.markdown("""
     margin: 14px 0 6px 2px;
 }
 
-/* KPI cards */
 .kpi-card {
     border-left: 4px solid;
     padding: 12px 14px;
     border-radius: 6px;
     background: #F8FAFC;
     min-height: 92px;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 .kpi-card .kpi-label {
     text-transform: uppercase;
@@ -78,7 +75,6 @@ st.markdown("""
     margin-top: 4px;
 }
 
-/* Color variants */
 .kpi-blue   { background: #EFF4FB; border-color: #1565C0; }
 .kpi-blue   .kpi-value { color: #1565C0; }
 .kpi-green  { background: #ECF6EE; border-color: #2E7D32; }
@@ -93,6 +89,13 @@ st.markdown("""
 .kpi-gray   .kpi-value { color: #374151; }
 .kpi-purple { background: #F3EEF7; border-color: #6A1B9A; }
 .kpi-purple .kpi-value { color: #6A1B9A; }
+
+/* Compact drill-down buttons under KPI tiles */
+div.stButton > button[kind="secondary"][data-testid*="drill_btn"] {
+    font-size: 11.5px;
+    padding: 2px 8px;
+    min-height: 28px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -132,7 +135,7 @@ tr_info   = data["tr_info"]
 
 
 # -----------------------------------------------------------------------------
-# Dark header + refresh button
+# Header
 # -----------------------------------------------------------------------------
 hdr_left, hdr_right = st.columns([6, 1])
 with hdr_left:
@@ -195,7 +198,7 @@ st.sidebar.divider()
 st.sidebar.caption(
     "**Data source:** Azure Blob Storage. "
     "Upload replacement files to the configured container and click "
-    "**Refresh Data** at the top of the page to re-pull."
+    "**Refresh Data** at the top to re-pull."
 )
 
 
@@ -215,6 +218,21 @@ summary  = metrics_mod.generate_executive_summary(fdf, kpis, monthly, payer_m, d
 
 
 # -----------------------------------------------------------------------------
+# Drill-down mapping — maps a KPI key → (display label, filter function)
+# -----------------------------------------------------------------------------
+DRILLS = {
+    "paid":          ("Paid Claims",         lambda d: d[d["is_paid"]]),
+    "denied":        ("Denied Claims",       lambda d: d[d["is_denied"]]),
+    "pending":       ("Pending Claims",      lambda d: d[d["is_pending"]]),
+    "resubmitted":   ("Resubmitted Claims",
+                      lambda d: d[d["claim_status_normalized"].eq("Resubmitted")]),
+    "not_submitted": ("Not Submitted",       lambda d: d[~d["in_tracker"]]),
+    "outstanding":   ("Outstanding Claims",  lambda d: d[d["is_outstanding"]]),
+    "declined":      ("Declined at Provider",lambda d: d[d["is_declined_at_provider"]]),
+}
+
+
+# -----------------------------------------------------------------------------
 # Executive summary
 # -----------------------------------------------------------------------------
 with st.container(border=True):
@@ -224,7 +242,7 @@ with st.container(border=True):
 
 
 # -----------------------------------------------------------------------------
-# KPI tiles — grouped and color-coded
+# KPI tiles — grouped, color-coded, with drill-down buttons on outcome tiles
 # -----------------------------------------------------------------------------
 def kpi_card(label: str, value: str, color: str, sub: str = "") -> str:
     sub_html = f'<div class="kpi-sub">{sub}</div>' if sub else ""
@@ -233,10 +251,19 @@ def kpi_card(label: str, value: str, color: str, sub: str = "") -> str:
             f'<div class="kpi-value">{value}</div>'
             f'{sub_html}</div>')
 
+def drill_button(column, drill_key: str, label: str = "🔍 View details"):
+    """Render a drill-down button inside a column; sets session state and reruns."""
+    if column.button(label, key=f"drill_btn_{drill_key}",
+                     use_container_width=True):
+        st.session_state["drill"] = drill_key
+        st.rerun()
+
 with st.container(border=True):
     st.markdown("##### KPI OVERVIEW")
 
-    st.markdown('<div class="kpi-section-label">VOLUME</div>', unsafe_allow_html=True)
+    # VOLUME
+    st.markdown('<div class="kpi-section-label">VOLUME</div>',
+                unsafe_allow_html=True)
     v = st.columns(4)
     v[0].markdown(kpi_card("Total SuperBills",
                            f"{kpis['total_superbills']:,}", "blue"),
@@ -251,7 +278,9 @@ with st.container(border=True):
     v[3].markdown(kpi_card("Not Submitted",
                            f"{kpis['not_submitted_claims']:,}", "orange"),
                   unsafe_allow_html=True)
+    drill_button(v[3], "not_submitted")
 
+    # CLAIM OUTCOMES
     st.markdown('<div class="kpi-section-label">CLAIM OUTCOMES</div>',
                 unsafe_allow_html=True)
     o = st.columns(4)
@@ -259,17 +288,22 @@ with st.container(border=True):
                            f"{kpis['paid_claims']:,}", "green",
                            f"Paid Rate: {kpis['paid_rate']:.1f}%"),
                   unsafe_allow_html=True)
+    drill_button(o[0], "paid")
     o[1].markdown(kpi_card("Denied Claims",
                            f"{kpis['denied_claims']:,}", "red",
                            f"Denial Rate: {kpis['denial_rate']:.1f}%"),
                   unsafe_allow_html=True)
+    drill_button(o[1], "denied")
     o[2].markdown(kpi_card("Pending Claims",
                            f"{kpis['pending_claims']:,}", "gray"),
                   unsafe_allow_html=True)
+    drill_button(o[2], "pending")
     o[3].markdown(kpi_card("Resubmitted",
                            f"{kpis['resubmitted_claims']:,}", "purple"),
                   unsafe_allow_html=True)
+    drill_button(o[3], "resubmitted")
 
+    # FINANCIAL & FOLLOW-UP
     st.markdown('<div class="kpi-section-label">FINANCIAL &amp; FOLLOW-UP</div>',
                 unsafe_allow_html=True)
     f = st.columns(4)
@@ -284,10 +318,12 @@ with st.container(border=True):
                            f"${kpis['outstanding_charge']:,.2f}", "amber",
                            "Pending / Denied / Resubmitted"),
                   unsafe_allow_html=True)
+    drill_button(f[2], "outstanding")
     f[3].markdown(kpi_card("Declined at Provider",
                            f"{kpis['declined_at_provider_claims']:,}", "gray",
                            f"${kpis['charges_declined_at_provider']:,.2f}"),
                   unsafe_allow_html=True)
+    drill_button(f[3], "declined")
 
     with st.expander("KPI definitions"):
         st.markdown("""
@@ -300,6 +336,46 @@ with st.container(border=True):
 - **Outstanding Charges** — charges on submitted claims that are not Paid and not Rejected.
 - **Declined at Provider** — provider chose not to bill; not counted as Not Submitted.
 """)
+
+
+# -----------------------------------------------------------------------------
+# Drill-down panel — shows filtered rows for whichever KPI was clicked
+# -----------------------------------------------------------------------------
+drill_key = st.session_state.get("drill")
+if drill_key and drill_key in DRILLS:
+    label, filter_fn = DRILLS[drill_key]
+    drill_df = filter_fn(fdf)
+    with st.container(border=True):
+        hc_left, hc_right = st.columns([5, 1])
+        hc_left.markdown(f"### 🔍 Drill-down: {label} "
+                         f"<span style='color:#64748B;font-size:14px;'>"
+                         f"({len(drill_df):,} rows, "
+                         f"respecting current sidebar filters)</span>",
+                         unsafe_allow_html=True)
+        if hc_right.button("✕ Close", key="drill_close",
+                           use_container_width=True):
+            st.session_state["drill"] = None
+            st.rerun()
+
+        if len(drill_df) == 0:
+            st.info("No claims match this category under the current filters.")
+        else:
+            detail_df = metrics_mod.detail_dataframe(drill_df)
+            st.dataframe(detail_df, use_container_width=True,
+                         hide_index=True, height=420)
+
+            buf = StringIO()
+            w = csv.writer(buf)
+            w.writerow(list(detail_df.columns))
+            w.writerows(detail_df.itertuples(index=False, name=None))
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            st.download_button(
+                f"⬇️ Download {label} as CSV",
+                data=buf.getvalue(),
+                file_name=f"{drill_key}_{stamp}.csv",
+                mime="text/csv",
+                key="drill_dl",
+            )
 
 
 # -----------------------------------------------------------------------------
