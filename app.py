@@ -248,21 +248,28 @@ div[class*="st-key-tile_"] button em {{
     opacity: 0.78 !important;
 }}
 
-/* Per-tile color schemes */
-.st-key-tile_not_submitted button {{ background: #FDF1E3 !important; border-left-color: #EF6C00 !important; color: #EF6C00 !important; }}
-.st-key-tile_not_submitted button:hover {{ background: #FBE8D0 !important; }}
+/* Per-tile color schemes (matched to the KPI OVERVIEW spec) */
+/* Claims Submitted — green */
+.st-key-tile_submitted button {{ background: #E6F7F0 !important; border-left-color: #0F9B6E !important; color: #0F9B6E !important; }}
+.st-key-tile_submitted button:hover {{ background: #D5F0E3 !important; }}
+/* Yet to Submit — orange */
+.st-key-tile_yet_to_submit button {{ background: #FDF1E3 !important; border-left-color: #EF6C00 !important; color: #EF6C00 !important; }}
+.st-key-tile_yet_to_submit button:hover {{ background: #FBE8D0 !important; }}
+/* Paid — green */
 .st-key-tile_paid button {{ background: #E6F7F0 !important; border-left-color: #0F9B6E !important; color: #0F9B6E !important; }}
 .st-key-tile_paid button:hover {{ background: #D5F0E3 !important; }}
+/* Denied — deep red */
 .st-key-tile_denied button {{ background: #FBECEC !important; border-left-color: #C62828 !important; color: #C62828 !important; }}
 .st-key-tile_denied button:hover {{ background: #F7DEDE !important; }}
-.st-key-tile_pending button {{ background: #F1F3F5 !important; border-left-color: #6B7280 !important; color: #374151 !important; }}
-.st-key-tile_pending button:hover {{ background: #E6E9ED !important; }}
-.st-key-tile_resubmitted button {{ background: #F3EEF7 !important; border-left-color: #6A1B9A !important; color: #6A1B9A !important; }}
-.st-key-tile_resubmitted button:hover {{ background: #ECE2F2 !important; }}
-.st-key-tile_outstanding button {{ background: #FDF6E3 !important; border-left-color: #B8860B !important; color: #B8860B !important; }}
-.st-key-tile_outstanding button:hover {{ background: #FBEDC9 !important; }}
-.st-key-tile_declined button {{ background: #F1F3F5 !important; border-left-color: #6B7280 !important; color: #374151 !important; }}
-.st-key-tile_declined button:hover {{ background: #E6E9ED !important; }}
+/* Declined at Provider — rose / pink-red (visibly distinct from Denied) */
+.st-key-tile_declined button {{ background: #FDF2F8 !important; border-left-color: #DB2777 !important; color: #BE185D !important; }}
+.st-key-tile_declined button:hover {{ background: #FBE4EF !important; }}
+/* Outstanding — Submitted → yellow */
+.st-key-tile_outstanding_sub button {{ background: #FFFBEB !important; border-left-color: #CA8A04 !important; color: #A16207 !important; }}
+.st-key-tile_outstanding_sub button:hover {{ background: #FEF3C7 !important; }}
+/* Outstanding — Yet to Submit → red */
+.st-key-tile_outstanding_yet button {{ background: #FBECEC !important; border-left-color: #C62828 !important; color: #C62828 !important; }}
+.st-key-tile_outstanding_yet button:hover {{ background: #F7DEDE !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -472,7 +479,7 @@ with st.container(border=True):
     # CLAIM OUTCOMES
     st.markdown('<div class="kpi-section-label">CLAIM OUTCOMES</div>',
                 unsafe_allow_html=True)
-    o = st.columns(4)
+    o = st.columns(3)
     clickable_kpi(o[0], "paid", "Paid Claims",
                   f"{kpis['paid_claims']:,}", "green",
                   f"Paid Rate: {kpis['paid_rate']:.1f}%")
@@ -480,11 +487,8 @@ with st.container(border=True):
                   f"{kpis['denied_claims']:,}", "red",
                   f"Denial Rate: {kpis['denial_rate']:.1f}%")
     clickable_kpi(o[2], "declined", "Declined at Provider",
-                  f"{kpis['declined_at_provider_claims']:,}", "gray",
+                  f"{kpis['declined_at_provider_claims']:,}", "rose",
                   f"${kpis['charges_declined_at_provider']:,.2f}")
-    static_kpi(o[3], "Pending Claims",
-               f"{kpis['pending_claims']:,}", "gray",
-               "Awaiting payer adjudication")
 
     # FINANCIAL & FOLLOW-UP
     st.markdown('<div class="kpi-section-label">FINANCIAL &amp; FOLLOW-UP</div>',
