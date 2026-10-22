@@ -42,6 +42,15 @@ st.markdown(f"""
 }}
 header[data-testid="stHeader"] {{ background: transparent; }}
 
+/* Keep bordered sections (Executive Summary / KPI Overview / Drill-down) white
+   so they read as cards on the soft page background. */
+div[data-testid="stVerticalBlockBorderWrapper"] {{
+    background: #FFFFFF !important;
+    border-radius: 10px !important;
+    border-color: #E5E7EB !important;
+    box-shadow: 0 1px 2px rgba(14, 59, 59, 0.04);
+}}
+
 /* Brand header */
 .gg-header {{
     background: {GGH_DARK};
