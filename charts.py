@@ -9,8 +9,8 @@ import plotly.graph_objects as go
 PALETTE = {
     "Paid":                 "#2E7D32",
     "Denied":               "#C62828",
-    "Pending":              "#1565C0",
-    "Submitted":            "#1565C0",
+    "Pending":              "#4D65FF",
+    "Submitted":            "#4D65FF",
     "Resubmitted":          "#6A1B9A",
     "Rejected":             "#EF6C00",
     "Not Submitted":        "#616161",
@@ -18,7 +18,7 @@ PALETTE = {
     "Unknown":              "#9E9E9E",
 }
 
-PRIMARY = "#1565C0"
+PRIMARY = "#4D65FF"
 ACCENT = "#2E7D32"
 WARN = "#C62828"
 

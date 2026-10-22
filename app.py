@@ -24,78 +24,136 @@ st.set_page_config(
 
 
 # -----------------------------------------------------------------------------
-# Custom styling
+# Custom styling — GroundGame.Health brand (dark header, #4D65FF accent)
 # -----------------------------------------------------------------------------
-st.markdown("""
-<style>
-.gg-header {
-    background: #0F172A;
-    color: #FFFFFF;
-    padding: 16px 22px;
-    border-radius: 8px;
-    margin-bottom: 14px;
-}
-.gg-header h1 { color: #FFFFFF; margin: 0; font-size: 22px; font-weight: 700; }
-.gg-header .meta { color: #94A3B8; font-size: 12.5px; margin-top: 6px; }
-.gg-header .meta b { color: #E2E8F0; }
+GGH_LOGO_URL = "https://cdn.prod.website-files.com/67203b5d63c900c3e572178d/6759ea2a8cbdec9badfe660d_ggh-web-logo-large.png"
+GGH_BLUE     = "#4D65FF"
+GGH_DARK     = "#1A1A1A"
+GGH_SLATE    = "#526077"
 
-.kpi-section-label {
+st.markdown(f"""
+<style>
+/* Pull the whole page up — Streamlit's default top padding is too tall */
+.block-container {{
+    padding-top: 1.2rem !important;
+    padding-bottom: 2rem !important;
+    max-width: 1600px;
+}}
+header[data-testid="stHeader"] {{ background: transparent; }}
+
+/* Brand header */
+.gg-header {{
+    background: {GGH_DARK};
+    color: #FFFFFF;
+    padding: 14px 22px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}}
+.gg-header .gg-logo-wrap {{
+    background: #FFFFFF;
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    height: 44px;
+}}
+.gg-header .gg-logo-wrap img {{ height: 28px; display: block; }}
+.gg-header .gg-title {{ flex: 1; min-width: 0; }}
+.gg-header h1 {{
+    color: #FFFFFF;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}}
+.gg-header .meta {{
+    color: #AAB4C6;
+    font-size: 12px;
+    margin-top: 3px;
+    line-height: 1.4;
+}}
+.gg-header .meta b {{ color: #E6EAF2; font-weight: 600; }}
+.gg-header .gg-accent {{
+    width: 4px;
+    align-self: stretch;
+    background: {GGH_BLUE};
+    border-radius: 2px;
+}}
+
+/* Primary buttons use brand blue */
+.stButton > button[kind="primary"] {{
+    background-color: {GGH_BLUE} !important;
+    border-color: {GGH_BLUE} !important;
+}}
+.stButton > button[kind="primary"]:hover {{
+    background-color: #3B52E6 !important;
+    border-color: #3B52E6 !important;
+}}
+
+/* KPI section labels */
+.kpi-section-label {{
     text-transform: uppercase;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
-    color: #64748B;
-    margin: 14px 0 6px 2px;
-}
+    color: {GGH_SLATE};
+    margin: 12px 0 6px 2px;
+}}
 
-.kpi-card {
+/* KPI cards */
+.kpi-card {{
     border-left: 4px solid;
     padding: 12px 14px;
     border-radius: 6px;
     background: #F8FAFC;
     min-height: 92px;
     margin-bottom: 6px;
-}
-.kpi-card .kpi-label {
+}}
+.kpi-card .kpi-label {{
     text-transform: uppercase;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.5px;
     color: #475569;
-}
-.kpi-card .kpi-value {
+}}
+.kpi-card .kpi-value {{
     font-size: 26px;
     font-weight: 700;
     margin-top: 4px;
     line-height: 1.1;
-}
-.kpi-card .kpi-sub {
+}}
+.kpi-card .kpi-sub {{
     font-size: 11.5px;
     color: #64748B;
     margin-top: 4px;
-}
+}}
 
-.kpi-blue   { background: #EFF4FB; border-color: #1565C0; }
-.kpi-blue   .kpi-value { color: #1565C0; }
-.kpi-green  { background: #ECF6EE; border-color: #2E7D32; }
-.kpi-green  .kpi-value { color: #2E7D32; }
-.kpi-red    { background: #FBECEC; border-color: #C62828; }
-.kpi-red    .kpi-value { color: #C62828; }
-.kpi-amber  { background: #FDF6E3; border-color: #B8860B; }
-.kpi-amber  .kpi-value { color: #B8860B; }
-.kpi-orange { background: #FDF1E3; border-color: #EF6C00; }
-.kpi-orange .kpi-value { color: #EF6C00; }
-.kpi-gray   { background: #F1F3F5; border-color: #6B7280; }
-.kpi-gray   .kpi-value { color: #374151; }
-.kpi-purple { background: #F3EEF7; border-color: #6A1B9A; }
-.kpi-purple .kpi-value { color: #6A1B9A; }
+/* Brand-tinted blue (primary) + status variants */
+.kpi-blue   {{ background: #EEF1FF; border-color: {GGH_BLUE}; }}
+.kpi-blue   .kpi-value {{ color: {GGH_BLUE}; }}
+.kpi-green  {{ background: #ECF6EE; border-color: #2E7D32; }}
+.kpi-green  .kpi-value {{ color: #2E7D32; }}
+.kpi-red    {{ background: #FBECEC; border-color: #C62828; }}
+.kpi-red    .kpi-value {{ color: #C62828; }}
+.kpi-amber  {{ background: #FDF6E3; border-color: #B8860B; }}
+.kpi-amber  .kpi-value {{ color: #B8860B; }}
+.kpi-orange {{ background: #FDF1E3; border-color: #EF6C00; }}
+.kpi-orange .kpi-value {{ color: #EF6C00; }}
+.kpi-gray   {{ background: #F1F3F5; border-color: #6B7280; }}
+.kpi-gray   .kpi-value {{ color: #374151; }}
+.kpi-purple {{ background: #F3EEF7; border-color: #6A1B9A; }}
+.kpi-purple .kpi-value {{ color: #6A1B9A; }}
 
-/* Compact drill-down buttons under KPI tiles */
-div.stButton > button[kind="secondary"][data-testid*="drill_btn"] {
+/* Compact drill-down buttons */
+div.stButton > button[kind="secondary"][data-testid*="drill_btn"] {{
     font-size: 11.5px;
     padding: 2px 8px;
     min-height: 28px;
-}
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -137,20 +195,25 @@ tr_info   = data["tr_info"]
 # -----------------------------------------------------------------------------
 # Header
 # -----------------------------------------------------------------------------
-hdr_left, hdr_right = st.columns([6, 1])
+hdr_left, hdr_right = st.columns([6, 1], vertical_alignment="center")
 with hdr_left:
     st.markdown(f"""
 <div class="gg-header">
-    <h1>Revenue Cycle Dashboard</h1>
-    <div class="meta">
-        Last refreshed: <b>{data['loaded_at']}</b> &nbsp;·&nbsp;
-        SuperBill: <b>{sb_info['filename']}</b> ({sb_info['modified']}) &nbsp;·&nbsp;
-        Revenue Tracker: <b>{tr_info['filename']}</b> ({tr_info['modified']})
+    <div class="gg-accent"></div>
+    <div class="gg-logo-wrap">
+        <img src="{GGH_LOGO_URL}" alt="GroundGame.Health">
+    </div>
+    <div class="gg-title">
+        <h1>Revenue Cycle Dashboard</h1>
+        <div class="meta">
+            Last refreshed: <b>{data['loaded_at']}</b> &nbsp;·&nbsp;
+            SuperBill: <b>{sb_info['filename']}</b> ({sb_info['modified']}) &nbsp;·&nbsp;
+            Revenue Tracker: <b>{tr_info['filename']}</b> ({tr_info['modified']})
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 with hdr_right:
-    st.write("")
     if st.button("🔄 Refresh Data", use_container_width=True, type="primary"):
         load_everything.clear()
         st.rerun()
