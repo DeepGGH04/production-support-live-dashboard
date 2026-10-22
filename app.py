@@ -206,16 +206,22 @@ div[class*="st-key-tile_"] button:hover {{
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 14px rgba(14, 59, 59, 0.12) !important;
 }}
-/* Force the markdown wrapper and paragraph inside the button to left-align */
-div[class*="st-key-tile_"] button div[data-testid="stMarkdownContainer"] {{
+/* Force everything inside the button to left-align (Streamlit centers by default) */
+div[class*="st-key-tile_"] button > div,
+div[class*="st-key-tile_"] button div[data-testid="stMarkdownContainer"],
+div[class*="st-key-tile_"] button div[data-testid="stMarkdown"] {{
+    display: block !important;
     text-align: left !important;
     width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }}
 div[class*="st-key-tile_"] button p {{
     margin: 0 !important;
     text-align: left !important;
     width: 100% !important;
     text-transform: inherit !important;
+    display: block !important;
 }}
 /* Markdown bold inside the label becomes the big value */
 div[class*="st-key-tile_"] button strong {{
@@ -451,21 +457,6 @@ with st.container(border=True):
     clickable_kpi(v[3], "not_submitted", "Not Submitted",
                   f"{kpis['not_submitted_claims']:,}", "orange")
 
-    # CLAIM OUTCOMES
-    st.markdown('<div class="kpi-section-label">CLAIM OUTCOMES</div>',
-                unsafe_allow_html=True)
-    o = st.columns(4)
-    clickable_kpi(o[0], "paid", "Paid Claims",
-                  f"{kpis['paid_claims']:,}", "green",
-                  f"Paid Rate: {kpis['paid_rate']:.1f}%")
-    clickable_kpi(o[1], "denied", "Denied Claims",
-                  f"{kpis['denied_claims']:,}", "red",
-                  f"Denial Rate: {kpis['denial_rate']:.1f}%")
-    clickable_kpi(o[2], "pending", "Pending Claims",
-                  f"{kpis['pending_claims']:,}", "gray")
-    clickable_kpi(o[3], "resubmitted", "Resubmitted",
-                  f"{kpis['resubmitted_claims']:,}", "purple")
-
     # FINANCIAL & FOLLOW-UP
     st.markdown('<div class="kpi-section-label">FINANCIAL &amp; FOLLOW-UP</div>',
                 unsafe_allow_html=True)
@@ -481,6 +472,21 @@ with st.container(border=True):
     clickable_kpi(f[3], "declined", "Declined at Provider",
                   f"{kpis['declined_at_provider_claims']:,}", "gray",
                   f"${kpis['charges_declined_at_provider']:,.2f}")
+
+    # CLAIM OUTCOMES
+    st.markdown('<div class="kpi-section-label">CLAIM OUTCOMES</div>',
+                unsafe_allow_html=True)
+    o = st.columns(4)
+    clickable_kpi(o[0], "paid", "Paid Claims",
+                  f"{kpis['paid_claims']:,}", "green",
+                  f"Paid Rate: {kpis['paid_rate']:.1f}%")
+    clickable_kpi(o[1], "denied", "Denied Claims",
+                  f"{kpis['denied_claims']:,}", "red",
+                  f"Denial Rate: {kpis['denial_rate']:.1f}%")
+    clickable_kpi(o[2], "pending", "Pending Claims",
+                  f"{kpis['pending_claims']:,}", "gray")
+    clickable_kpi(o[3], "resubmitted", "Resubmitted",
+                  f"{kpis['resubmitted_claims']:,}", "purple")
 
     with st.expander("KPI definitions"):
         st.markdown("""
