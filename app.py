@@ -1,10 +1,6 @@
 """
 Revenue Cycle Dashboard — Streamlit edition.
-
-Replaces the Flask + Plotly.js version. Reads SuperBill + Revenue Tracker
-Excel files from Azure Blob Storage (manual upload — click Refresh Data
-after replacing the blobs). All business rules and KPIs match the Flask
-version exactly; only the loader and UI changed.
+Branded header + color-coded KPI tiles matching the Flask original.
 """
 from datetime import datetime
 from io import StringIO
@@ -28,7 +24,81 @@ st.set_page_config(
 
 
 # -----------------------------------------------------------------------------
-# Data loading (cached). Clearing the cache = re-fetching from Azure Blob.
+# Custom styling — dark header, grouped color-coded KPI tiles.
+# -----------------------------------------------------------------------------
+st.markdown("""
+<style>
+/* Dark header strip */
+.gg-header {
+    background: #0F172A;
+    color: #FFFFFF;
+    padding: 16px 22px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+}
+.gg-header h1 { color: #FFFFFF; margin: 0; font-size: 22px; font-weight: 700; }
+.gg-header .meta { color: #94A3B8; font-size: 12.5px; margin-top: 6px; }
+.gg-header .meta b { color: #E2E8F0; }
+
+/* KPI section labels */
+.kpi-section-label {
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #64748B;
+    margin: 14px 0 6px 2px;
+}
+
+/* KPI cards */
+.kpi-card {
+    border-left: 4px solid;
+    padding: 12px 14px;
+    border-radius: 6px;
+    background: #F8FAFC;
+    min-height: 92px;
+    margin-bottom: 10px;
+}
+.kpi-card .kpi-label {
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #475569;
+}
+.kpi-card .kpi-value {
+    font-size: 26px;
+    font-weight: 700;
+    margin-top: 4px;
+    line-height: 1.1;
+}
+.kpi-card .kpi-sub {
+    font-size: 11.5px;
+    color: #64748B;
+    margin-top: 4px;
+}
+
+/* Color variants */
+.kpi-blue   { background: #EFF4FB; border-color: #1565C0; }
+.kpi-blue   .kpi-value { color: #1565C0; }
+.kpi-green  { background: #ECF6EE; border-color: #2E7D32; }
+.kpi-green  .kpi-value { color: #2E7D32; }
+.kpi-red    { background: #FBECEC; border-color: #C62828; }
+.kpi-red    .kpi-value { color: #C62828; }
+.kpi-amber  { background: #FDF6E3; border-color: #B8860B; }
+.kpi-amber  .kpi-value { color: #B8860B; }
+.kpi-orange { background: #FDF1E3; border-color: #EF6C00; }
+.kpi-orange .kpi-value { color: #EF6C00; }
+.kpi-gray   { background: #F1F3F5; border-color: #6B7280; }
+.kpi-gray   .kpi-value { color: #374151; }
+.kpi-purple { background: #F3EEF7; border-color: #6A1B9A; }
+.kpi-purple .kpi-value { color: #6A1B9A; }
+</style>
+""", unsafe_allow_html=True)
+
+
+# -----------------------------------------------------------------------------
+# Data loading
 # -----------------------------------------------------------------------------
 @st.cache_data(show_spinner="Loading SuperBill + Revenue Tracker from Azure…")
 def load_everything():
@@ -48,15 +118,6 @@ def load_everything():
     }
 
 
-# -----------------------------------------------------------------------------
-# Header
-# -----------------------------------------------------------------------------
-st.title("GGH Revenue Cycle Dashboard")
-st.caption(
-    "Claim-lifecycle KPIs built from SuperBill + Revenue Tracker. "
-    "Charge Amount is NOT collected revenue."
-)
-
 try:
     data = load_everything()
 except Exception as e:
@@ -69,21 +130,27 @@ dup_info  = data["dup_info"]
 sb_info   = data["sb_info"]
 tr_info   = data["tr_info"]
 
-head_a, head_b, head_c, head_d = st.columns([2, 2, 2, 1])
-with head_a:
-    st.markdown(f"**SuperBill**  \n`{sb_info['filename']}`  \n"
-                f"Modified: {sb_info['modified']} · {sb_info['rows']:,} rows")
-with head_b:
-    st.markdown(f"**Revenue Tracker**  \n`{tr_info['filename']}`  \n"
-                f"Modified: {tr_info['modified']} · {tr_info['rows']:,} rows")
-with head_c:
-    st.markdown(f"**Dashboard loaded**  \n{data['loaded_at']}")
-with head_d:
-    if st.button("🔄 Refresh Data", use_container_width=True):
+
+# -----------------------------------------------------------------------------
+# Dark header + refresh button
+# -----------------------------------------------------------------------------
+hdr_left, hdr_right = st.columns([6, 1])
+with hdr_left:
+    st.markdown(f"""
+<div class="gg-header">
+    <h1>Revenue Cycle Dashboard</h1>
+    <div class="meta">
+        Last refreshed: <b>{data['loaded_at']}</b> &nbsp;·&nbsp;
+        SuperBill: <b>{sb_info['filename']}</b> ({sb_info['modified']}) &nbsp;·&nbsp;
+        Revenue Tracker: <b>{tr_info['filename']}</b> ({tr_info['modified']})
+    </div>
+</div>
+""", unsafe_allow_html=True)
+with hdr_right:
+    st.write("")
+    if st.button("🔄 Refresh Data", use_container_width=True, type="primary"):
         load_everything.clear()
         st.rerun()
-
-st.divider()
 
 
 # -----------------------------------------------------------------------------
@@ -107,13 +174,12 @@ billing_month = _opt_select(
     "Billing Month", month_values, "f_month",
     formatter=lambda v: "All" if v == "All" else month_labels.get(v, v),
 )
-
-provider = _opt_select("Provider (NPI)",       options["providers"],            "f_provider")
-payer    = _opt_select("Payer",                options["payers"],               "f_payer")
-status   = _opt_select("Normalized Status",    options["statuses"],             "f_status")
-group    = _opt_select("Group Type",           options["group_types"],          "f_group")
-entity   = _opt_select("Contracting Entity",   options["contracting_entities"], "f_entity")
-proc     = _opt_select("Procedure Code",       options["procedure_codes"],      "f_proc")
+provider = _opt_select("Provider (NPI)",     options["providers"],            "f_provider")
+payer    = _opt_select("Payer",              options["payers"],               "f_payer")
+status   = _opt_select("Normalized Status",  options["statuses"],             "f_status")
+group    = _opt_select("Group Type",         options["group_types"],          "f_group")
+entity   = _opt_select("Contracting Entity", options["contracting_entities"], "f_entity")
+proc     = _opt_select("Procedure Code",     options["procedure_codes"],      "f_proc")
 
 filters = {
     "billing_month":      billing_month,
@@ -134,7 +200,7 @@ st.sidebar.caption(
 
 
 # -----------------------------------------------------------------------------
-# Apply filters, compute metrics
+# Compute metrics
 # -----------------------------------------------------------------------------
 fdf = metrics_mod.apply_filters(df_claims, filters)
 
@@ -151,36 +217,89 @@ summary  = metrics_mod.generate_executive_summary(fdf, kpis, monthly, payer_m, d
 # -----------------------------------------------------------------------------
 # Executive summary
 # -----------------------------------------------------------------------------
-st.subheader("Executive Summary")
-for line in summary:
-    st.markdown(f"- {line}")
+with st.container(border=True):
+    st.markdown("##### EXECUTIVE SUMMARY")
+    for line in summary:
+        st.markdown(f"- {line}")
 
 
 # -----------------------------------------------------------------------------
-# KPI row
+# KPI tiles — grouped and color-coded
 # -----------------------------------------------------------------------------
-st.subheader("Key Metrics")
-k1, k2, k3, k4, k5 = st.columns(5)
-k1.metric("Total SuperBills",   f"{kpis['total_superbills']:,}")
-k2.metric("Total Charges",      f"${kpis['total_charge_amount']:,.2f}")
-k3.metric("Submission Rate",    f"{kpis['submission_rate']:.1f}%",
-          help=f"{kpis['total_submitted']:,} submitted / "
-               f"{kpis['total_superbills']:,} SuperBills")
-k4.metric("Paid Rate",          f"{kpis['paid_rate']:.1f}%",
-          help=f"{kpis['paid_claims']:,} paid / "
-               f"{kpis['total_submitted']:,} submitted")
-k5.metric("Denial Rate",        f"{kpis['denial_rate']:.1f}%",
-          help=f"{kpis['denied_claims']:,} denied / "
-               f"{kpis['total_submitted']:,} submitted")
+def kpi_card(label: str, value: str, color: str, sub: str = "") -> str:
+    sub_html = f'<div class="kpi-sub">{sub}</div>' if sub else ""
+    return (f'<div class="kpi-card kpi-{color}">'
+            f'<div class="kpi-label">{label}</div>'
+            f'<div class="kpi-value">{value}</div>'
+            f'{sub_html}</div>')
 
-k6, k7, k8, k9, k10 = st.columns(5)
-k6.metric("Pending Claims",      f"{kpis['pending_claims']:,}")
-k7.metric("Resubmitted",         f"{kpis['resubmitted_claims']:,}")
-k8.metric("Rejected",            f"{kpis['rejected_claims']:,}")
-k9.metric("Not Submitted",       f"{kpis['not_submitted_claims']:,}",
-          help="SuperBills without a Revenue Tracker row.")
-k10.metric("Outstanding Charges", f"${kpis['outstanding_charge']:,.2f}",
-           help="Submitted claims not Paid and not Rejected.")
+with st.container(border=True):
+    st.markdown("##### KPI OVERVIEW")
+
+    st.markdown('<div class="kpi-section-label">VOLUME</div>', unsafe_allow_html=True)
+    v = st.columns(4)
+    v[0].markdown(kpi_card("Total SuperBills",
+                           f"{kpis['total_superbills']:,}", "blue"),
+                  unsafe_allow_html=True)
+    v[1].markdown(kpi_card("Total Charge Amount",
+                           f"${kpis['total_charge_amount']:,.2f}", "blue"),
+                  unsafe_allow_html=True)
+    v[2].markdown(kpi_card("Claims Submitted",
+                           f"{kpis['total_submitted']:,}", "blue",
+                           f"Submission Rate: {kpis['submission_rate']:.1f}%"),
+                  unsafe_allow_html=True)
+    v[3].markdown(kpi_card("Not Submitted",
+                           f"{kpis['not_submitted_claims']:,}", "orange"),
+                  unsafe_allow_html=True)
+
+    st.markdown('<div class="kpi-section-label">CLAIM OUTCOMES</div>',
+                unsafe_allow_html=True)
+    o = st.columns(4)
+    o[0].markdown(kpi_card("Paid Claims",
+                           f"{kpis['paid_claims']:,}", "green",
+                           f"Paid Rate: {kpis['paid_rate']:.1f}%"),
+                  unsafe_allow_html=True)
+    o[1].markdown(kpi_card("Denied Claims",
+                           f"{kpis['denied_claims']:,}", "red",
+                           f"Denial Rate: {kpis['denial_rate']:.1f}%"),
+                  unsafe_allow_html=True)
+    o[2].markdown(kpi_card("Pending Claims",
+                           f"{kpis['pending_claims']:,}", "gray"),
+                  unsafe_allow_html=True)
+    o[3].markdown(kpi_card("Resubmitted",
+                           f"{kpis['resubmitted_claims']:,}", "purple"),
+                  unsafe_allow_html=True)
+
+    st.markdown('<div class="kpi-section-label">FINANCIAL &amp; FOLLOW-UP</div>',
+                unsafe_allow_html=True)
+    f = st.columns(4)
+    f[0].markdown(kpi_card("Charges — Paid Claims",
+                           f"${kpis['charges_paid']:,.2f}", "green",
+                           "Not revenue collected"),
+                  unsafe_allow_html=True)
+    f[1].markdown(kpi_card("Charges — Denied",
+                           f"${kpis['charges_denied']:,.2f}", "red"),
+                  unsafe_allow_html=True)
+    f[2].markdown(kpi_card("Outstanding Charges",
+                           f"${kpis['outstanding_charge']:,.2f}", "amber",
+                           "Pending / Denied / Resubmitted"),
+                  unsafe_allow_html=True)
+    f[3].markdown(kpi_card("Declined at Provider",
+                           f"{kpis['declined_at_provider_claims']:,}", "gray",
+                           f"${kpis['charges_declined_at_provider']:,.2f}"),
+                  unsafe_allow_html=True)
+
+    with st.expander("KPI definitions"):
+        st.markdown("""
+- **Total SuperBills** — count of SuperBill rows.
+- **Total Charge Amount** — sum of Charge Amount. **Not** collected revenue.
+- **Claims Submitted** — tracker status is Paid / Denied / Pending / Resubmitted / Rejected.
+- **Submission Rate** — Claims Submitted ÷ Total SuperBills.
+- **Paid / Denial Rate** — of submitted claims only.
+- **Not Submitted** — SuperBills with no matching Revenue Tracker row.
+- **Outstanding Charges** — charges on submitted claims that are not Paid and not Rejected.
+- **Declined at Provider** — provider chose not to bill; not counted as Not Submitted.
+""")
 
 
 # -----------------------------------------------------------------------------
@@ -199,7 +318,7 @@ with tab_mix:
     with c1:
         st.plotly_chart(charts.status_donut(status_b), use_container_width=True)
     with c2:
-        st.plotly_chart(charts.aging_bars(aging),      use_container_width=True)
+        st.plotly_chart(charts.aging_bars(aging), use_container_width=True)
 
 with tab_payer:
     c1, c2 = st.columns(2)
@@ -210,17 +329,13 @@ with tab_payer:
         st.plotly_chart(charts.denial_by_payer_bar(payer_m["denial_by_payer"]),
                         use_container_width=True)
     st.markdown("##### Payer breakdown")
-    st.dataframe(
-        pd.DataFrame(payer_m["table"]),
-        use_container_width=True, hide_index=True,
-    )
+    st.dataframe(pd.DataFrame(payer_m["table"]),
+                 use_container_width=True, hide_index=True)
 
 with tab_prov:
     st.markdown("##### Provider breakdown (NPI-only display)")
-    st.dataframe(
-        pd.DataFrame(prov_m),
-        use_container_width=True, hide_index=True,
-    )
+    st.dataframe(pd.DataFrame(prov_m),
+                 use_container_width=True, hide_index=True)
 
 with tab_detail:
     st.markdown("##### Claim detail")
@@ -259,19 +374,37 @@ with tab_detail:
 
 with tab_dq:
     d1, d2, d3 = st.columns(3)
-    d1.metric("Missing from Tracker",            f"{dq['missing_from_tracker']:,}")
-    d2.metric("Tracker rows w/o SuperBill",      f"{dq['tracker_rows_without_superbill']:,}")
-    d3.metric("Submitted w/o Claim #",           f"{dq['submitted_without_claim_number']:,}")
+    d1.markdown(kpi_card("Missing from Tracker",
+                         f"{dq['missing_from_tracker']:,}", "orange"),
+                unsafe_allow_html=True)
+    d2.markdown(kpi_card("Tracker Rows w/o SuperBill",
+                         f"{dq['tracker_rows_without_superbill']:,}", "gray"),
+                unsafe_allow_html=True)
+    d3.markdown(kpi_card("Submitted w/o Claim #",
+                         f"{dq['submitted_without_claim_number']:,}", "red"),
+                unsafe_allow_html=True)
 
     d4, d5, d6 = st.columns(3)
-    d4.metric("Missing Status (in Tracker)",     f"{dq['missing_status']:,}")
-    d5.metric("Missing Provider",                f"{dq['missing_provider']:,}")
-    d6.metric("Missing Payer",                   f"{dq['missing_payer']:,}")
+    d4.markdown(kpi_card("Missing Status (in Tracker)",
+                         f"{dq['missing_status']:,}", "amber"),
+                unsafe_allow_html=True)
+    d5.markdown(kpi_card("Missing Provider",
+                         f"{dq['missing_provider']:,}", "gray"),
+                unsafe_allow_html=True)
+    d6.markdown(kpi_card("Missing Payer",
+                         f"{dq['missing_payer']:,}", "gray"),
+                unsafe_allow_html=True)
 
     d7, d8, d9 = st.columns(3)
-    d7.metric("Missing Charge Amount",           f"{dq['missing_charge_amount']:,}")
-    d8.metric("Dup SB IDs (SuperBill file)",     f"{dq['duplicate_superbill_ids_in_sb']:,}")
-    d9.metric("Dup SB IDs (Tracker file)",       f"{dq['duplicate_superbill_ids_in_tr']:,}")
+    d7.markdown(kpi_card("Missing Charge Amount",
+                         f"{dq['missing_charge_amount']:,}", "amber"),
+                unsafe_allow_html=True)
+    d8.markdown(kpi_card("Dup SB IDs (SuperBill)",
+                         f"{dq['duplicate_superbill_ids_in_sb']:,}", "red"),
+                unsafe_allow_html=True)
+    d9.markdown(kpi_card("Dup SB IDs (Tracker)",
+                         f"{dq['duplicate_superbill_ids_in_tr']:,}", "red"),
+                unsafe_allow_html=True)
 
     if dq["duplicate_superbill_list_sb"]:
         st.markdown("##### Duplicates in SuperBill")
