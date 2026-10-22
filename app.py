@@ -471,22 +471,7 @@ with tab_dq:
                          f"{dq['missing_payer']:,}", "gray"),
                 unsafe_allow_html=True)
 
-    d7, d8, d9 = st.columns(3)
+    d7, _, _ = st.columns(3)
     d7.markdown(kpi_card("Missing Charge Amount",
                          f"{dq['missing_charge_amount']:,}", "amber"),
                 unsafe_allow_html=True)
-    d8.markdown(kpi_card("Dup SB IDs (SuperBill)",
-                         f"{dq['duplicate_superbill_ids_in_sb']:,}", "red"),
-                unsafe_allow_html=True)
-    d9.markdown(kpi_card("Dup SB IDs (Tracker)",
-                         f"{dq['duplicate_superbill_ids_in_tr']:,}", "red"),
-                unsafe_allow_html=True)
-
-    if dq["duplicate_superbill_list_sb"]:
-        st.markdown("##### Duplicates in SuperBill")
-        st.dataframe(pd.DataFrame(dq["duplicate_superbill_list_sb"]),
-                     use_container_width=True, hide_index=True)
-    if dq["duplicate_superbill_list_tr"]:
-        st.markdown("##### Duplicates in Revenue Tracker")
-        st.dataframe(pd.DataFrame(dq["duplicate_superbill_list_tr"]),
-                     use_container_width=True, hide_index=True)
