@@ -117,12 +117,15 @@ header[data-testid="stHeader"] {{ background: transparent; }}
     margin: 12px 0 6px 2px;
 }}
 
-/* KPI cards (static tiles) */
+/* KPI cards (static tiles) — clean white with colored accent */
 .kpi-card {{
     border-left: 4px solid;
-    padding: 10px 12px;
+    border-top: 1px solid #E5E7EB;
+    border-right: 1px solid #E5E7EB;
+    border-bottom: 1px solid #E5E7EB;
+    padding: 12px 14px;
     border-radius: 6px;
-    background: #F8FAFC;
+    background: #FFFFFF;
     min-height: 98px;
     height: 98px;
     margin-bottom: 6px;
@@ -136,18 +139,19 @@ header[data-testid="stHeader"] {{ background: transparent; }}
     font-size: 10.5px;
     font-weight: 600;
     letter-spacing: 0.4px;
-    color: #475569;
+    color: #64748B;
 }}
 .kpi-card .kpi-value {{
-    font-size: 21px;
+    font-size: 22px;
     font-weight: 700;
-    margin-top: 2px;
+    margin-top: 3px;
     line-height: 1.1;
 }}
 .kpi-card .kpi-sub {{
     font-size: 10.5px;
-    color: #64748B;
-    margin-top: 2px;
+    color: #94A3B8;
+    margin-top: 3px;
+    font-weight: 500;
 }}
 
 /* True blue for Volume tiles + status variants */
@@ -171,28 +175,30 @@ div[class*="st-key-tile_"] button,
 div[class*="st-key-tile_"] button[kind="secondary"],
 div[class*="st-key-tile_"] button[kind="primary"] {{
     text-align: left !important;
-    padding: 10px 12px !important;
+    padding: 12px 14px !important;
     min-height: 98px !important;
     height: 98px !important;
     overflow: hidden !important;
     border-radius: 6px !important;
     border-left-width: 4px !important;
     border-left-style: solid !important;
-    border-top: 1px solid rgba(0,0,0,0.04) !important;
-    border-right: 1px solid rgba(0,0,0,0.04) !important;
-    border-bottom: 1px solid rgba(0,0,0,0.04) !important;
+    border-top: 1px solid #E5E7EB !important;
+    border-right: 1px solid #E5E7EB !important;
+    border-bottom: 1px solid #E5E7EB !important;
+    background: #FFFFFF !important;
+    color: #64748B !important;
     font-size: 10.5px !important;
     font-weight: 600 !important;
     letter-spacing: 0.4px !important;
     text-transform: uppercase !important;
     line-height: 1.3 !important;
-    transition: transform 0.12s, box-shadow 0.12s !important;
+    transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s !important;
     position: relative !important;
     cursor: pointer !important;
     display: flex !important;
     align-items: flex-start !important;
     justify-content: flex-start !important;
-    box-shadow: none !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
 }}
 div[class*="st-key-tile_"] button::after {{
     content: "↗";
@@ -248,31 +254,38 @@ div[class*="st-key-tile_"] button em {{
     opacity: 0.78 !important;
 }}
 
-/* Per-tile color schemes (matched to the KPI OVERVIEW spec) */
-/* Claims Submitted — green */
-.st-key-tile_submitted button {{ background: #E6F7F0 !important; border-left-color: #0F9B6E !important; color: #0F9B6E !important; }}
-.st-key-tile_submitted button:hover {{ background: #D5F0E3 !important; }}
-/* Charges — Submitted — blue (financial parallel to the green count tile) */
-.st-key-tile_submitted_amt button {{ background: #EEF2FF !important; border-left-color: #2563EB !important; color: #2563EB !important; }}
-.st-key-tile_submitted_amt button:hover {{ background: #DBE4FD !important; }}
-/* Yet to Submit — orange */
-.st-key-tile_yet_to_submit button {{ background: #FDF1E3 !important; border-left-color: #EF6C00 !important; color: #EF6C00 !important; }}
-.st-key-tile_yet_to_submit button:hover {{ background: #FBE8D0 !important; }}
-/* Paid — green */
-.st-key-tile_paid button {{ background: #E6F7F0 !important; border-left-color: #0F9B6E !important; color: #0F9B6E !important; }}
-.st-key-tile_paid button:hover {{ background: #D5F0E3 !important; }}
-/* Denied — deep red */
-.st-key-tile_denied button {{ background: #FBECEC !important; border-left-color: #C62828 !important; color: #C62828 !important; }}
-.st-key-tile_denied button:hover {{ background: #F7DEDE !important; }}
-/* Declined at Provider — rose / pink-red (visibly distinct from Denied) */
-.st-key-tile_declined button {{ background: #FDF2F8 !important; border-left-color: #DB2777 !important; color: #BE185D !important; }}
-.st-key-tile_declined button:hover {{ background: #FBE4EF !important; }}
-/* Outstanding — Submitted → yellow */
-.st-key-tile_outstanding_sub button {{ background: #FFFBEB !important; border-left-color: #CA8A04 !important; color: #A16207 !important; }}
-.st-key-tile_outstanding_sub button:hover {{ background: #FEF3C7 !important; }}
-/* Outstanding — Yet to Submit → red */
-.st-key-tile_outstanding_yet button {{ background: #FBECEC !important; border-left-color: #C62828 !important; color: #C62828 !important; }}
-.st-key-tile_outstanding_yet button:hover {{ background: #F7DEDE !important; }}
+/* Per-tile color accents (white tiles, colored left border + colored number) */
+.st-key-tile_submitted button       {{ border-left-color: #0F9B6E !important; }}
+.st-key-tile_submitted button:hover {{ background: #F0FBF6 !important; border-color: #D1F0E1 !important; }}
+.st-key-tile_submitted button strong {{ color: #0F9B6E !important; }}
+
+.st-key-tile_submitted_amt button       {{ border-left-color: #2563EB !important; }}
+.st-key-tile_submitted_amt button:hover {{ background: #F3F6FE !important; border-color: #D5DEFA !important; }}
+.st-key-tile_submitted_amt button strong {{ color: #2563EB !important; }}
+
+.st-key-tile_yet_to_submit button       {{ border-left-color: #EF6C00 !important; }}
+.st-key-tile_yet_to_submit button:hover {{ background: #FFF7EC !important; border-color: #FBE1C4 !important; }}
+.st-key-tile_yet_to_submit button strong {{ color: #EF6C00 !important; }}
+
+.st-key-tile_paid button       {{ border-left-color: #0F9B6E !important; }}
+.st-key-tile_paid button:hover {{ background: #F0FBF6 !important; border-color: #D1F0E1 !important; }}
+.st-key-tile_paid button strong {{ color: #0F9B6E !important; }}
+
+.st-key-tile_denied button       {{ border-left-color: #C62828 !important; }}
+.st-key-tile_denied button:hover {{ background: #FEF2F2 !important; border-color: #F8CFCF !important; }}
+.st-key-tile_denied button strong {{ color: #C62828 !important; }}
+
+.st-key-tile_declined button       {{ border-left-color: #DB2777 !important; }}
+.st-key-tile_declined button:hover {{ background: #FDF4F8 !important; border-color: #F7D4E5 !important; }}
+.st-key-tile_declined button strong {{ color: #BE185D !important; }}
+
+.st-key-tile_outstanding_sub button       {{ border-left-color: #CA8A04 !important; }}
+.st-key-tile_outstanding_sub button:hover {{ background: #FFFBED !important; border-color: #FBE9B5 !important; }}
+.st-key-tile_outstanding_sub button strong {{ color: #A16207 !important; }}
+
+.st-key-tile_outstanding_yet button       {{ border-left-color: #C62828 !important; }}
+.st-key-tile_outstanding_yet button:hover {{ background: #FEF2F2 !important; border-color: #F8CFCF !important; }}
+.st-key-tile_outstanding_yet button strong {{ color: #C62828 !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -468,12 +481,12 @@ with st.container(border=True):
     st.markdown('<div class="kpi-section-label">VOLUME</div>',
                 unsafe_allow_html=True)
     v = st.columns(4)
-    static_kpi(v[0], "Total SuperBills",
-               f"{kpis['total_superbills']:,}", "blue",
-               "Distinct NPI × SuperBill ID")
-    static_kpi(v[1], "Total Billable Items",
+    static_kpi(v[0], "Total Billable Items",
                f"{kpis['total_billable_items']:,}", "blue",
-               f"${kpis['total_charge_amount']:,.2f} charged")
+               f"{kpis['total_superbills']:,} distinct SuperBills")
+    static_kpi(v[1], "Total Charge Amount",
+               f"${kpis['total_charge_amount']:,.2f}", "blue",
+               "All billable items")
     clickable_kpi(v[2], "submitted", "Claims Submitted",
                   f"{kpis['total_submitted']:,}", "blue",
                   f"Submission Rate: {kpis['submission_rate']:.1f}%")
