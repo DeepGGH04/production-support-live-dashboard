@@ -51,6 +51,25 @@ div[data-testid="stVerticalBlockBorderWrapper"] {{
     box-shadow: 0 1px 2px rgba(14, 59, 59, 0.04);
 }}
 
+/* Compact Executive Summary bullet list */
+.st-key-exec_summary ul {{
+    margin: 4px 0 0 0 !important;
+    padding-left: 22px !important;
+}}
+.st-key-exec_summary ul li {{
+    margin: 0 !important;
+    padding: 1px 0 !important;
+    line-height: 1.45 !important;
+    font-size: 13.5px !important;
+}}
+.st-key-exec_summary ul li p {{
+    margin: 0 !important;
+}}
+.st-key-exec_summary h5 {{
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}}
+
 /* Brand header */
 .gg-header {{
     background: {GGH_DARK};
@@ -479,12 +498,14 @@ DRILLS = {
 
 
 # -----------------------------------------------------------------------------
-# Executive summary
+# Executive summary — rendered as a single tight bullet list (not separate
+# markdown blocks) so Streamlit doesn't double-space between bullets. Dollar
+# signs are escaped so Streamlit's LaTeX parser doesn't eat them.
 # -----------------------------------------------------------------------------
-with st.container(border=True):
+with st.container(border=True, key="exec_summary"):
     st.markdown("##### EXECUTIVE SUMMARY")
-    for line in summary:
-        st.markdown(f"- {line}")
+    bullets = "\n".join(f"- {line.replace('$', chr(92) + '$')}" for line in summary)
+    st.markdown(bullets)
 
 
 # -----------------------------------------------------------------------------
