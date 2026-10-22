@@ -481,36 +481,34 @@ with st.container(border=True):
                   f"{kpis['yet_to_submit_count']:,}", "orange",
                   "Not in Revenue Tracker")
 
-    # CLAIM OUTCOMES
+    # CLAIM OUTCOMES — enriched sub-text with rate AND dollar amount
     st.markdown('<div class="kpi-section-label">CLAIM OUTCOMES</div>',
                 unsafe_allow_html=True)
     o = st.columns(3)
     clickable_kpi(o[0], "paid", "Paid Claims",
                   f"{kpis['paid_claims']:,}", "green",
-                  f"Paid Rate: {kpis['paid_rate']:.1f}%")
+                  f"Paid Rate {kpis['paid_rate']:.1f}% · ${kpis['charges_paid']:,.2f}")
     clickable_kpi(o[1], "denied", "Denied Claims",
                   f"{kpis['denied_claims']:,}", "red",
-                  f"Denial Rate: {kpis['denial_rate']:.1f}%")
+                  f"Denial Rate {kpis['denial_rate']:.1f}% · ${kpis['charges_denied']:,.2f}")
     clickable_kpi(o[2], "declined", "Declined at Provider",
                   f"{kpis['declined_at_provider_claims']:,}", "rose",
-                  f"${kpis['charges_declined_at_provider']:,.2f}")
+                  f"${kpis['charges_declined_at_provider']:,.2f} not billed")
 
-    # FINANCIAL & FOLLOW-UP
+    # FINANCIAL & FOLLOW-UP — 4 tiles (dropped standalone Charges — Denied)
     st.markdown('<div class="kpi-section-label">FINANCIAL &amp; FOLLOW-UP</div>',
                 unsafe_allow_html=True)
-    f = st.columns(5)
+    f = st.columns(4)
     clickable_kpi(f[0], "submitted_amt", "Charges — Submitted",
                   f"${kpis['charges_submitted']:,.2f}", "blue",
-                  f"{kpis['total_submitted']:,} claims submitted")
-    static_kpi(f[1], "Charges — Paid Claims",
+                  f"{kpis['total_submitted']:,} claims")
+    static_kpi(f[1], "Charges — Paid",
                f"${kpis['charges_paid']:,.2f}", "green",
                "Not revenue collected")
-    static_kpi(f[2], "Charges — Denied",
-               f"${kpis['charges_denied']:,.2f}", "red")
-    clickable_kpi(f[3], "outstanding_sub", "Outstanding — Submitted",
+    clickable_kpi(f[2], "outstanding_sub", "Outstanding — Submitted",
                   f"${kpis['outstanding_sub_charges']:,.2f}", "amber",
                   f"{kpis['outstanding_sub_count']:,} claims · not Paid / not Denied")
-    clickable_kpi(f[4], "outstanding_yet", "Outstanding — Yet to Submit",
+    clickable_kpi(f[3], "outstanding_yet", "Outstanding — Yet to Submit",
                   f"${kpis['yet_to_submit_charges']:,.2f}", "orange",
                   f"{kpis['yet_to_submit_count']:,} SuperBills not in Tracker")
 
