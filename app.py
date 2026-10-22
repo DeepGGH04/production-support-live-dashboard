@@ -157,10 +157,11 @@ div[data-testid="stVerticalBlockBorderWrapper"] {{
     line-height: 1.1;
 }}
 .kpi-card .kpi-sub {{
-    font-size: 10.5px;
+    font-size: 9.5px;
     color: #94A3B8;
     margin-top: 3px;
     font-weight: 500;
+    line-height: 1.3;
 }}
 
 /* True blue for Volume tiles + status variants */
@@ -253,14 +254,16 @@ div[class*="st-key-tile_"] button strong {{
 }}
 /* Markdown italic inside the label becomes the sub-text */
 div[class*="st-key-tile_"] button em {{
-    font-size: 10.5px !important;
+    font-size: 9.5px !important;
     font-style: normal !important;
-    font-weight: 400 !important;
+    font-weight: 500 !important;
     display: block !important;
     margin-top: 2px !important;
     text-transform: none !important;
     letter-spacing: normal !important;
-    opacity: 0.78 !important;
+    color: #94A3B8 !important;
+    opacity: 1 !important;
+    line-height: 1.3 !important;
 }}
 
 /* Per-tile color accents (white tiles, colored left border + colored number) */
@@ -502,11 +505,14 @@ def clickable_kpi(column, drill_key: str, label: str, value: str,
                   color: str, sub: str = ""):
     """A KPI tile rendered as a native Streamlit button. Clicking stays in-app
     (no page reload) and opens the drill panel for that bucket."""
-    # Markdown label: plain label line, bold value, italic sub-text.
-    # The CSS targets `strong` and `em` inside the button to style them.
-    parts = [label, f"**{value}**"]
-    if sub:
-        parts.append(f"*{sub}*")
+    # Streamlit's markdown parser treats $...$ as LaTeX math, so any sub-text
+    # with two dollar signs gets eaten. Escape $ to a literal in both value
+    # and sub so numbers render correctly.
+    value_safe = value.replace("$", "\\$")
+    sub_safe   = sub.replace("$", "\\$") if sub else ""
+    parts = [label, f"**{value_safe}**"]
+    if sub_safe:
+        parts.append(f"*{sub_safe}*")
     btn_label = "  \n".join(parts)  # markdown hard line breaks (2 spaces + newline)
     if column.button(btn_label, key=f"tile_{drill_key}",
                      use_container_width=True):
@@ -550,21 +556,21 @@ with st.container(border=True):
     # OUTSTANDING — split by actionability
     st.markdown('<div class="kpi-section-label">OUTSTANDING (ACTION QUEUE)</div>',
                 unsafe_allow_html=True)
-    oldest_sub = (f"Oldest {kpis['oldest_outstanding_days']} days"
-                  if kpis['oldest_outstanding_days'] else "No submitted outstanding")
+    oldest_sub = (f" · oldest {kpis['oldest_outstanding_days']}d"
+                  if kpis['oldest_outstanding_days'] else "")
     f = st.columns(4)
     clickable_kpi(f[0], "outstanding_pending", "Outstanding — Pending",
                   f"${kpis['outstanding_pending_charges']:,.2f}", "amber",
-                  f"{kpis['outstanding_pending_count']:,} with payer · {oldest_sub}")
+                  f"{kpis['outstanding_pending_count']:,} with payer{oldest_sub}")
     clickable_kpi(f[1], "outstanding_rework", "Outstanding — Needs Rework",
                   f"${kpis['outstanding_rework_charges']:,.2f}", "orange",
-                  f"{kpis['outstanding_rework_count']:,} rejected / missing / resubmitted")
+                  f"{kpis['outstanding_rework_count']:,} to rework")
     clickable_kpi(f[2], "outstanding_yet", "Outstanding — Yet to Submit",
                   f"${kpis['yet_to_submit_charges']:,.2f}", "orange",
-                  f"{kpis['yet_to_submit_count']:,} SuperBills not in Tracker")
+                  f"{kpis['yet_to_submit_count']:,} not in Tracker")
     clickable_kpi(f[3], "submitted_amt", "Charges — Submitted",
                   f"${kpis['charges_submitted']:,.2f}", "blue",
-                  f"{kpis['total_submitted']:,} claims in payer pipeline")
+                  f"{kpis['total_submitted']:,} in pipeline")
 
     # BY PROCEDURE CODE — unit economics for the two billable codes
     st.markdown('<div class="kpi-section-label">BY PROCEDURE CODE</div>',
@@ -572,12 +578,10 @@ with st.container(border=True):
     p = st.columns(2)
     clickable_kpi(p[0], "g0019", "G0019 — Items",
                   f"{kpis['g0019_count']:,}", "blue",
-                  f"${kpis['g0019_charges']:,.2f} total · "
-                  f"${kpis['g0019_avg']:,.2f} avg")
+                  f"${kpis['g0019_charges']:,.0f} total · avg ${kpis['g0019_avg']:,.0f}")
     clickable_kpi(p[1], "g0022", "G0022 — Items",
                   f"{kpis['g0022_count']:,}", "blue",
-                  f"${kpis['g0022_charges']:,.2f} total · "
-                  f"${kpis['g0022_avg']:,.2f} avg")
+                  f"${kpis['g0022_charges']:,.0f} total · avg ${kpis['g0022_avg']:,.0f}")
 
     with st.expander("KPI definitions"):
         st.markdown("""
