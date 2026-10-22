@@ -51,22 +51,22 @@ div[data-testid="stVerticalBlockBorderWrapper"] {{
     box-shadow: 0 1px 2px rgba(14, 59, 59, 0.04);
 }}
 
-/* Compact Executive Summary bullet list */
+/* Executive Summary bullet list — compact but breathable */
 .st-key-exec_summary ul {{
-    margin: 4px 0 0 0 !important;
+    margin: 8px 0 0 0 !important;
     padding-left: 22px !important;
 }}
 .st-key-exec_summary ul li {{
     margin: 0 !important;
-    padding: 1px 0 !important;
-    line-height: 1.45 !important;
-    font-size: 13.5px !important;
+    padding: 4px 0 !important;
+    line-height: 1.5 !important;
+    font-size: 14px !important;
 }}
 .st-key-exec_summary ul li p {{
     margin: 0 !important;
 }}
 .st-key-exec_summary h5 {{
-    margin-bottom: 0 !important;
+    margin-bottom: 4px !important;
     padding-bottom: 0 !important;
 }}
 
@@ -176,9 +176,9 @@ div[data-testid="stVerticalBlockBorderWrapper"] {{
     line-height: 1.1;
 }}
 .kpi-card .kpi-sub {{
-    font-size: 9.5px;
-    color: #94A3B8;
-    margin-top: 3px;
+    font-size: 11.5px;
+    color: #64748B;
+    margin-top: 4px;
     font-weight: 500;
     line-height: 1.3;
 }}
@@ -273,14 +273,14 @@ div[class*="st-key-tile_"] button strong {{
 }}
 /* Markdown italic inside the label becomes the sub-text */
 div[class*="st-key-tile_"] button em {{
-    font-size: 9.5px !important;
+    font-size: 11.5px !important;
     font-style: normal !important;
     font-weight: 500 !important;
     display: block !important;
-    margin-top: 2px !important;
+    margin-top: 3px !important;
     text-transform: none !important;
     letter-spacing: normal !important;
-    color: #94A3B8 !important;
+    color: #64748B !important;
     opacity: 1 !important;
     line-height: 1.3 !important;
 }}
