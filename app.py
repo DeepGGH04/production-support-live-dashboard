@@ -26,10 +26,11 @@ st.set_page_config(
 # -----------------------------------------------------------------------------
 # Custom styling — GroundGame.Health brand (dark header, #4D65FF accent)
 # -----------------------------------------------------------------------------
-GGH_LOGO_URL = "https://cdn.prod.website-files.com/67203b5d63c900c3e572178d/6759ea2a8cbdec9badfe660d_ggh-web-logo-large.png"
-GGH_BLUE     = "#4D65FF"
-GGH_DARK     = "#1A1A1A"
-GGH_SLATE    = "#526077"
+GGH_LOGO_URL   = "https://cdn.prod.website-files.com/67203b5d63c900c3e572178d/6759ea2a8cbdec9badfe660d_ggh-web-logo-large.png"
+GGH_DARK       = "#0E3B3B"  # deep teal — matches "About Us" panel
+GGH_TEAL       = "#1F7A79"  # mid teal — matches "Careers" panel, primary accent
+GGH_TEAL_HOVER = "#176060"
+GGH_MUTED      = "#A8C4C3"  # soft teal-gray for subtitle text
 
 st.markdown(f"""
 <style>
@@ -46,7 +47,7 @@ header[data-testid="stHeader"] {{ background: transparent; }}
     background: {GGH_DARK};
     color: #FFFFFF;
     padding: 14px 22px;
-    border-radius: 10px;
+    border-radius: 12px;
     margin-bottom: 14px;
     display: flex;
     align-items: center;
@@ -71,27 +72,49 @@ header[data-testid="stHeader"] {{ background: transparent; }}
     letter-spacing: 0.2px;
 }}
 .gg-header .meta {{
-    color: #AAB4C6;
+    color: {GGH_MUTED};
     font-size: 12px;
     margin-top: 3px;
     line-height: 1.4;
 }}
-.gg-header .meta b {{ color: #E6EAF2; font-weight: 600; }}
+.gg-header .meta b {{ color: #E6EFEF; font-weight: 600; }}
 .gg-header .gg-accent {{
     width: 4px;
     align-self: stretch;
-    background: {GGH_BLUE};
+    background: {GGH_TEAL};
     border-radius: 2px;
 }}
 
-/* Primary buttons use brand blue */
+/* Primary buttons — GGH teal pill */
 .stButton > button[kind="primary"] {{
-    background-color: {GGH_BLUE} !important;
-    border-color: {GGH_BLUE} !important;
+    background-color: {GGH_TEAL} !important;
+    border-color: {GGH_TEAL} !important;
+    border-radius: 999px !important;
+    font-weight: 600 !important;
+    padding: 8px 18px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    transition: all 0.15s ease-in-out;
 }}
 .stButton > button[kind="primary"]:hover {{
-    background-color: #3B52E6 !important;
-    border-color: #3B52E6 !important;
+    background-color: {GGH_TEAL_HOVER} !important;
+    border-color: {GGH_TEAL_HOVER} !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}}
+.stButton > button[kind="primary"]:focus {{
+    box-shadow: 0 0 0 3px rgba(31,122,121,0.25) !important;
+}}
+/* Secondary buttons (drill-down "View details" etc.) — subtle teal outline */
+.stButton > button[kind="secondary"] {{
+    border-radius: 999px !important;
+    border-color: {GGH_TEAL} !important;
+    color: {GGH_TEAL} !important;
+    font-weight: 500 !important;
+}}
+.stButton > button[kind="secondary"]:hover {{
+    background-color: #E8F2F2 !important;
+    color: {GGH_TEAL_HOVER} !important;
+    border-color: {GGH_TEAL_HOVER} !important;
 }}
 
 /* KPI section labels */
@@ -100,7 +123,7 @@ header[data-testid="stHeader"] {{ background: transparent; }}
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
-    color: {GGH_SLATE};
+    color: #526077;
     margin: 12px 0 6px 2px;
 }}
 
@@ -132,9 +155,9 @@ header[data-testid="stHeader"] {{ background: transparent; }}
     margin-top: 4px;
 }}
 
-/* Brand-tinted blue (primary) + status variants */
-.kpi-blue   {{ background: #EEF1FF; border-color: {GGH_BLUE}; }}
-.kpi-blue   .kpi-value {{ color: {GGH_BLUE}; }}
+/* Brand-tinted teal (primary) + status variants */
+.kpi-blue   {{ background: #E8F2F2; border-color: {GGH_TEAL}; }}
+.kpi-blue   .kpi-value {{ color: {GGH_TEAL}; }}
 .kpi-green  {{ background: #ECF6EE; border-color: #2E7D32; }}
 .kpi-green  .kpi-value {{ color: #2E7D32; }}
 .kpi-red    {{ background: #FBECEC; border-color: #C62828; }}
@@ -214,7 +237,8 @@ with hdr_left:
 </div>
 """, unsafe_allow_html=True)
 with hdr_right:
-    if st.button("🔄 Refresh Data", use_container_width=True, type="primary"):
+    if st.button("↻  Refresh Data", use_container_width=True, type="primary",
+                 help="Re-pull SuperBill + Revenue Tracker from Azure Blob Storage"):
         load_everything.clear()
         st.rerun()
 
