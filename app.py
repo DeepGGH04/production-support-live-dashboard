@@ -127,14 +127,17 @@ header[data-testid="stHeader"] {{ background: transparent; }}
     margin: 12px 0 6px 2px;
 }}
 
-/* KPI cards */
+/* KPI cards (static tiles) */
 .kpi-card {{
     border-left: 4px solid;
     padding: 12px 14px;
     border-radius: 6px;
     background: #F8FAFC;
-    min-height: 92px;
+    min-height: 110px;
     margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }}
 .kpi-card .kpi-label {{
     text-transform: uppercase;
@@ -171,32 +174,90 @@ header[data-testid="stHeader"] {{ background: transparent; }}
 .kpi-purple {{ background: #F3EEF7; border-color: #6A1B9A; }}
 .kpi-purple .kpi-value {{ color: #6A1B9A; }}
 
-/* ----- Clickable KPI tiles -----
-   The whole card is wrapped in an anchor that writes ?drill=<key>. */
-a.kpi-link {{
-    text-decoration: none !important;
-    color: inherit !important;
-    display: block;
+/* ----- Clickable KPI tiles — native Streamlit buttons styled as cards ----- */
+div[class*="st-key-tile_"] button {{
+    text-align: left !important;
+    padding: 12px 14px !important;
+    min-height: 110px !important;
+    height: 110px !important;
+    border-radius: 6px !important;
+    border-left-width: 4px !important;
+    border-left-style: solid !important;
+    border-top: 1px solid rgba(0,0,0,0.04) !important;
+    border-right: 1px solid rgba(0,0,0,0.04) !important;
+    border-bottom: 1px solid rgba(0,0,0,0.04) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    line-height: 1.4 !important;
+    transition: transform 0.12s, box-shadow 0.12s !important;
+    position: relative !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
 }}
-a.kpi-link .kpi-card {{
-    cursor: pointer;
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
-    position: relative;
-}}
-a.kpi-link .kpi-card::after {{
+div[class*="st-key-tile_"] button::after {{
     content: "↗";
     position: absolute;
     top: 8px;
     right: 12px;
-    color: #94A3B8;
-    opacity: 0.55;
-    font-size: 15px;
-    pointer-events: none;
+    font-size: 14px;
+    opacity: 0.5;
+    letter-spacing: normal;
+    text-transform: none;
+    font-weight: 400;
 }}
-a.kpi-link:hover .kpi-card {{
-    transform: translateY(-2px);
-    box-shadow: 0 6px 14px rgba(14, 59, 59, 0.12);
+div[class*="st-key-tile_"] button:hover {{
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 14px rgba(14, 59, 59, 0.12) !important;
 }}
+/* The markdown wrapper inside the button */
+div[class*="st-key-tile_"] button div[data-testid="stMarkdownContainer"],
+div[class*="st-key-tile_"] button p {{
+    margin: 0 !important;
+    text-align: left !important;
+    width: 100% !important;
+    text-transform: inherit !important;
+}}
+/* Markdown bold inside the label becomes the big value */
+div[class*="st-key-tile_"] button strong {{
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    display: block !important;
+    margin-top: 4px !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    line-height: 1.1 !important;
+}}
+/* Markdown italic inside the label becomes the sub-text */
+div[class*="st-key-tile_"] button em {{
+    font-size: 11.5px !important;
+    font-style: normal !important;
+    font-weight: 400 !important;
+    display: block !important;
+    margin-top: 2px !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    opacity: 0.78 !important;
+}}
+
+/* Per-tile color schemes */
+.st-key-tile_not_submitted button {{ background: #FDF1E3 !important; border-left-color: #EF6C00 !important; color: #EF6C00 !important; }}
+.st-key-tile_not_submitted button:hover {{ background: #FBE8D0 !important; }}
+.st-key-tile_paid button {{ background: #E6F7F0 !important; border-left-color: #0F9B6E !important; color: #0F9B6E !important; }}
+.st-key-tile_paid button:hover {{ background: #D5F0E3 !important; }}
+.st-key-tile_denied button {{ background: #FBECEC !important; border-left-color: #C62828 !important; color: #C62828 !important; }}
+.st-key-tile_denied button:hover {{ background: #F7DEDE !important; }}
+.st-key-tile_pending button {{ background: #F1F3F5 !important; border-left-color: #6B7280 !important; color: #374151 !important; }}
+.st-key-tile_pending button:hover {{ background: #E6E9ED !important; }}
+.st-key-tile_resubmitted button {{ background: #F3EEF7 !important; border-left-color: #6A1B9A !important; color: #6A1B9A !important; }}
+.st-key-tile_resubmitted button:hover {{ background: #ECE2F2 !important; }}
+.st-key-tile_outstanding button {{ background: #FDF6E3 !important; border-left-color: #B8860B !important; color: #B8860B !important; }}
+.st-key-tile_outstanding button:hover {{ background: #FBEDC9 !important; }}
+.st-key-tile_declined button {{ background: #F1F3F5 !important; border-left-color: #6B7280 !important; color: #374151 !important; }}
+.st-key-tile_declined button:hover {{ background: #E6E9ED !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -364,13 +425,18 @@ def static_kpi(column, label: str, value: str, color: str, sub: str = ""):
 
 def clickable_kpi(column, drill_key: str, label: str, value: str,
                   color: str, sub: str = ""):
-    """A KPI tile wrapped in an anchor link that writes ?drill=<key> to the URL.
-    Streamlit treats the query-param change as a soft rerun and the drill panel
-    reads the param to render the matching claim rows."""
-    card_html = kpi_card(label, value, color, sub)
-    link_html = (f'<a class="kpi-link" href="?drill={drill_key}" '
-                 f'target="_self">{card_html}</a>')
-    column.markdown(link_html, unsafe_allow_html=True)
+    """A KPI tile rendered as a native Streamlit button. Clicking stays in-app
+    (no page reload) and opens the drill panel for that bucket."""
+    # Markdown label: plain label line, bold value, italic sub-text.
+    # The CSS targets `strong` and `em` inside the button to style them.
+    parts = [label, f"**{value}**"]
+    if sub:
+        parts.append(f"*{sub}*")
+    btn_label = "  \n".join(parts)  # markdown hard line breaks (2 spaces + newline)
+    if column.button(btn_label, key=f"tile_{drill_key}",
+                     use_container_width=True):
+        st.session_state["drill"] = drill_key
+        st.rerun()
 
 with st.container(border=True):
     st.markdown("##### KPI OVERVIEW")
@@ -434,9 +500,9 @@ with st.container(border=True):
 
 
 # -----------------------------------------------------------------------------
-# Drill-down panel — reads the drill key from the URL query param
+# Drill-down panel — reads drill key from session_state (set by tile button)
 # -----------------------------------------------------------------------------
-drill_key = st.query_params.get("drill")
+drill_key = st.session_state.get("drill")
 if drill_key and drill_key in DRILLS:
     label, filter_fn = DRILLS[drill_key]
     drill_df = filter_fn(fdf)
@@ -449,7 +515,7 @@ if drill_key and drill_key in DRILLS:
                          unsafe_allow_html=True)
         if hc_right.button("✕ Close", key="drill_close",
                            use_container_width=True):
-            st.query_params.clear()
+            st.session_state["drill"] = None
             st.rerun()
 
         if len(drill_df) == 0:
