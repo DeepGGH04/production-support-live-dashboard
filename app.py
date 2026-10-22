@@ -252,6 +252,9 @@ div[class*="st-key-tile_"] button em {{
 /* Claims Submitted — green */
 .st-key-tile_submitted button {{ background: #E6F7F0 !important; border-left-color: #0F9B6E !important; color: #0F9B6E !important; }}
 .st-key-tile_submitted button:hover {{ background: #D5F0E3 !important; }}
+/* Charges — Submitted — blue (financial parallel to the green count tile) */
+.st-key-tile_submitted_amt button {{ background: #EEF2FF !important; border-left-color: #2563EB !important; color: #2563EB !important; }}
+.st-key-tile_submitted_amt button:hover {{ background: #DBE4FD !important; }}
 /* Yet to Submit — orange */
 .st-key-tile_yet_to_submit button {{ background: #FDF1E3 !important; border-left-color: #EF6C00 !important; color: #EF6C00 !important; }}
 .st-key-tile_yet_to_submit button:hover {{ background: #FBE8D0 !important; }}
@@ -403,6 +406,8 @@ summary  = metrics_mod.generate_executive_summary(fdf, kpis, monthly, payer_m, d
 DRILLS = {
     "submitted":        ("Claims Submitted",
                          lambda d: d[d["is_submitted"]]),
+    "submitted_amt":    ("Charges — Submitted",
+                         lambda d: d[d["is_submitted"]]),
     "yet_to_submit":    ("Yet to Submit (not in Revenue Tracker)",
                          lambda d: d[~d["in_tracker"]]),
     "paid":             ("Paid Claims",
@@ -493,16 +498,19 @@ with st.container(border=True):
     # FINANCIAL & FOLLOW-UP
     st.markdown('<div class="kpi-section-label">FINANCIAL &amp; FOLLOW-UP</div>',
                 unsafe_allow_html=True)
-    f = st.columns(4)
-    static_kpi(f[0], "Charges — Paid Claims",
+    f = st.columns(5)
+    clickable_kpi(f[0], "submitted_amt", "Charges — Submitted",
+                  f"${kpis['charges_submitted']:,.2f}", "blue",
+                  f"{kpis['total_submitted']:,} claims submitted")
+    static_kpi(f[1], "Charges — Paid Claims",
                f"${kpis['charges_paid']:,.2f}", "green",
                "Not revenue collected")
-    static_kpi(f[1], "Charges — Denied",
+    static_kpi(f[2], "Charges — Denied",
                f"${kpis['charges_denied']:,.2f}", "red")
-    clickable_kpi(f[2], "outstanding_sub", "Outstanding — Submitted",
+    clickable_kpi(f[3], "outstanding_sub", "Outstanding — Submitted",
                   f"${kpis['outstanding_sub_charges']:,.2f}", "amber",
                   f"{kpis['outstanding_sub_count']:,} claims · not Paid / not Denied")
-    clickable_kpi(f[3], "outstanding_yet", "Outstanding — Yet to Submit",
+    clickable_kpi(f[4], "outstanding_yet", "Outstanding — Yet to Submit",
                   f"${kpis['yet_to_submit_charges']:,.2f}", "orange",
                   f"{kpis['yet_to_submit_count']:,} SuperBills not in Tracker")
 
