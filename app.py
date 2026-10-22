@@ -104,18 +104,8 @@ header[data-testid="stHeader"] {{ background: transparent; }}
 .stButton > button[kind="primary"]:focus {{
     box-shadow: 0 0 0 3px rgba(31,122,121,0.25) !important;
 }}
-/* Secondary buttons (drill-down "View details" etc.) — subtle teal outline */
-.stButton > button[kind="secondary"] {{
-    border-radius: 999px !important;
-    border-color: {GGH_TEAL} !important;
-    color: {GGH_TEAL} !important;
-    font-weight: 500 !important;
-}}
-.stButton > button[kind="secondary"]:hover {{
-    background-color: #E8F2F2 !important;
-    color: {GGH_TEAL_HOVER} !important;
-    border-color: {GGH_TEAL_HOVER} !important;
-}}
+/* (Generic secondary-button pill style removed — KPI tiles are secondary
+   buttons and should look like cards, not pills.) */
 
 /* KPI section labels */
 .kpi-section-label {{
@@ -175,7 +165,9 @@ header[data-testid="stHeader"] {{ background: transparent; }}
 .kpi-purple .kpi-value {{ color: #6A1B9A; }}
 
 /* ----- Clickable KPI tiles — native Streamlit buttons styled as cards ----- */
-div[class*="st-key-tile_"] button {{
+div[class*="st-key-tile_"] button,
+div[class*="st-key-tile_"] button[kind="secondary"],
+div[class*="st-key-tile_"] button[kind="primary"] {{
     text-align: left !important;
     padding: 12px 14px !important;
     min-height: 110px !important;
@@ -197,6 +189,7 @@ div[class*="st-key-tile_"] button {{
     display: flex !important;
     align-items: flex-start !important;
     justify-content: flex-start !important;
+    box-shadow: none !important;
 }}
 div[class*="st-key-tile_"] button::after {{
     content: "↗";
@@ -213,8 +206,11 @@ div[class*="st-key-tile_"] button:hover {{
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 14px rgba(14, 59, 59, 0.12) !important;
 }}
-/* The markdown wrapper inside the button */
-div[class*="st-key-tile_"] button div[data-testid="stMarkdownContainer"],
+/* Force the markdown wrapper and paragraph inside the button to left-align */
+div[class*="st-key-tile_"] button div[data-testid="stMarkdownContainer"] {{
+    text-align: left !important;
+    width: 100% !important;
+}}
 div[class*="st-key-tile_"] button p {{
     margin: 0 !important;
     text-align: left !important;
