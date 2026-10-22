@@ -171,11 +171,54 @@ header[data-testid="stHeader"] {{ background: transparent; }}
 .kpi-purple {{ background: #F3EEF7; border-color: #6A1B9A; }}
 .kpi-purple .kpi-value {{ color: #6A1B9A; }}
 
-/* Compact drill-down buttons */
-div.stButton > button[kind="secondary"][data-testid*="drill_btn"] {{
-    font-size: 11.5px;
-    padding: 2px 8px;
-    min-height: 28px;
+/* ----- Clickable KPI tiles -----
+   Any Streamlit container keyed "tile_*" overlays an invisible button
+   on top of its KPI card, so the whole card acts as a drill-down button. */
+[class*="st-key-tile_"] {{
+    position: relative;
+}}
+[class*="st-key-tile_"] .kpi-card {{
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    position: relative;
+}}
+[class*="st-key-tile_"] .kpi-card::after {{
+    content: "↗";
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    color: #94A3B8;
+    font-size: 15px;
+    opacity: 0.55;
+    pointer-events: none;
+}}
+[class*="st-key-tile_"] .kpi-card:hover {{
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(14, 59, 59, 0.12);
+}}
+[class*="st-key-tile_"] .stButton {{
+    position: absolute !important;
+    inset: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 10 !important;
+}}
+[class*="st-key-tile_"] .stButton > button {{
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    opacity: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    color: transparent !important;
+    border-radius: 6px !important;
+}}
+[class*="st-key-tile_"] .stButton > button:focus-visible {{
+    outline: 2px solid {GGH_TEAL} !important;
+    opacity: 1 !important;
+    background: transparent !important;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -338,12 +381,21 @@ def kpi_card(label: str, value: str, color: str, sub: str = "") -> str:
             f'<div class="kpi-value">{value}</div>'
             f'{sub_html}</div>')
 
-def drill_button(column, drill_key: str, label: str = "🔍 View details"):
-    """Render a drill-down button inside a column; sets session state and reruns."""
-    if column.button(label, key=f"drill_btn_{drill_key}",
-                     use_container_width=True):
-        st.session_state["drill"] = drill_key
-        st.rerun()
+def static_kpi(column, label: str, value: str, color: str, sub: str = ""):
+    """A plain informational tile — not clickable."""
+    column.markdown(kpi_card(label, value, color, sub), unsafe_allow_html=True)
+
+def clickable_kpi(column, drill_key: str, label: str, value: str,
+                  color: str, sub: str = ""):
+    """A tile the user can click to drill into the raw rows for that bucket."""
+    with column:
+        with st.container(key=f"tile_{drill_key}"):
+            st.markdown(kpi_card(label, value, color, sub),
+                        unsafe_allow_html=True)
+            if st.button(f"View {label}", key=f"btn_{drill_key}",
+                         use_container_width=True):
+                st.session_state["drill"] = drill_key
+                st.rerun()
 
 with st.container(border=True):
     st.markdown("##### KPI OVERVIEW")
@@ -352,65 +404,46 @@ with st.container(border=True):
     st.markdown('<div class="kpi-section-label">VOLUME</div>',
                 unsafe_allow_html=True)
     v = st.columns(4)
-    v[0].markdown(kpi_card("Total SuperBills",
-                           f"{kpis['total_superbills']:,}", "blue"),
-                  unsafe_allow_html=True)
-    v[1].markdown(kpi_card("Total Charge Amount",
-                           f"${kpis['total_charge_amount']:,.2f}", "blue"),
-                  unsafe_allow_html=True)
-    v[2].markdown(kpi_card("Claims Submitted",
-                           f"{kpis['total_submitted']:,}", "blue",
-                           f"Submission Rate: {kpis['submission_rate']:.1f}%"),
-                  unsafe_allow_html=True)
-    v[3].markdown(kpi_card("Not Submitted",
-                           f"{kpis['not_submitted_claims']:,}", "orange"),
-                  unsafe_allow_html=True)
-    drill_button(v[3], "not_submitted")
+    static_kpi(v[0], "Total SuperBills",
+               f"{kpis['total_superbills']:,}", "blue")
+    static_kpi(v[1], "Total Charge Amount",
+               f"${kpis['total_charge_amount']:,.2f}", "blue")
+    static_kpi(v[2], "Claims Submitted",
+               f"{kpis['total_submitted']:,}", "blue",
+               f"Submission Rate: {kpis['submission_rate']:.1f}%")
+    clickable_kpi(v[3], "not_submitted", "Not Submitted",
+                  f"{kpis['not_submitted_claims']:,}", "orange")
 
     # CLAIM OUTCOMES
     st.markdown('<div class="kpi-section-label">CLAIM OUTCOMES</div>',
                 unsafe_allow_html=True)
     o = st.columns(4)
-    o[0].markdown(kpi_card("Paid Claims",
-                           f"{kpis['paid_claims']:,}", "green",
-                           f"Paid Rate: {kpis['paid_rate']:.1f}%"),
-                  unsafe_allow_html=True)
-    drill_button(o[0], "paid")
-    o[1].markdown(kpi_card("Denied Claims",
-                           f"{kpis['denied_claims']:,}", "red",
-                           f"Denial Rate: {kpis['denial_rate']:.1f}%"),
-                  unsafe_allow_html=True)
-    drill_button(o[1], "denied")
-    o[2].markdown(kpi_card("Pending Claims",
-                           f"{kpis['pending_claims']:,}", "gray"),
-                  unsafe_allow_html=True)
-    drill_button(o[2], "pending")
-    o[3].markdown(kpi_card("Resubmitted",
-                           f"{kpis['resubmitted_claims']:,}", "purple"),
-                  unsafe_allow_html=True)
-    drill_button(o[3], "resubmitted")
+    clickable_kpi(o[0], "paid", "Paid Claims",
+                  f"{kpis['paid_claims']:,}", "green",
+                  f"Paid Rate: {kpis['paid_rate']:.1f}%")
+    clickable_kpi(o[1], "denied", "Denied Claims",
+                  f"{kpis['denied_claims']:,}", "red",
+                  f"Denial Rate: {kpis['denial_rate']:.1f}%")
+    clickable_kpi(o[2], "pending", "Pending Claims",
+                  f"{kpis['pending_claims']:,}", "gray")
+    clickable_kpi(o[3], "resubmitted", "Resubmitted",
+                  f"{kpis['resubmitted_claims']:,}", "purple")
 
     # FINANCIAL & FOLLOW-UP
     st.markdown('<div class="kpi-section-label">FINANCIAL &amp; FOLLOW-UP</div>',
                 unsafe_allow_html=True)
     f = st.columns(4)
-    f[0].markdown(kpi_card("Charges — Paid Claims",
-                           f"${kpis['charges_paid']:,.2f}", "green",
-                           "Not revenue collected"),
-                  unsafe_allow_html=True)
-    f[1].markdown(kpi_card("Charges — Denied",
-                           f"${kpis['charges_denied']:,.2f}", "red"),
-                  unsafe_allow_html=True)
-    f[2].markdown(kpi_card("Outstanding Charges",
-                           f"${kpis['outstanding_charge']:,.2f}", "amber",
-                           "Pending / Denied / Resubmitted"),
-                  unsafe_allow_html=True)
-    drill_button(f[2], "outstanding")
-    f[3].markdown(kpi_card("Declined at Provider",
-                           f"{kpis['declined_at_provider_claims']:,}", "gray",
-                           f"${kpis['charges_declined_at_provider']:,.2f}"),
-                  unsafe_allow_html=True)
-    drill_button(f[3], "declined")
+    static_kpi(f[0], "Charges — Paid Claims",
+               f"${kpis['charges_paid']:,.2f}", "green",
+               "Not revenue collected")
+    static_kpi(f[1], "Charges — Denied",
+               f"${kpis['charges_denied']:,.2f}", "red")
+    clickable_kpi(f[2], "outstanding", "Outstanding Charges",
+                  f"${kpis['outstanding_charge']:,.2f}", "amber",
+                  "Pending / Denied / Resubmitted")
+    clickable_kpi(f[3], "declined", "Declined at Provider",
+                  f"{kpis['declined_at_provider_claims']:,}", "gray",
+                  f"${kpis['charges_declined_at_provider']:,.2f}")
 
     with st.expander("KPI definitions"):
         st.markdown("""
