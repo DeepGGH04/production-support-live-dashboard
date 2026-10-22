@@ -158,8 +158,8 @@ header[data-testid="stHeader"] {{ background: transparent; }}
 /* Brand-tinted teal (primary) + status variants */
 .kpi-blue   {{ background: #E8F2F2; border-color: {GGH_TEAL}; }}
 .kpi-blue   .kpi-value {{ color: {GGH_TEAL}; }}
-.kpi-green  {{ background: #ECF6EE; border-color: #2E7D32; }}
-.kpi-green  .kpi-value {{ color: #2E7D32; }}
+.kpi-green  {{ background: #E6F7F0; border-color: #0F9B6E; }}
+.kpi-green  .kpi-value {{ color: #0F9B6E; }}
 .kpi-red    {{ background: #FBECEC; border-color: #C62828; }}
 .kpi-red    .kpi-value {{ color: #C62828; }}
 .kpi-amber  {{ background: #FDF6E3; border-color: #B8860B; }}
@@ -172,97 +172,30 @@ header[data-testid="stHeader"] {{ background: transparent; }}
 .kpi-purple .kpi-value {{ color: #6A1B9A; }}
 
 /* ----- Clickable KPI tiles -----
-   A native Streamlit button, styled per-key to look like a colored KPI card. */
-div[class*="st-key-tile_"] button {{
-    text-align: left !important;
-    padding: 12px 16px !important;
-    min-height: 110px !important;
-    border-radius: 6px !important;
-    border-left-width: 4px !important;
-    border-left-style: solid !important;
-    border-top: 1px solid rgba(0,0,0,0.04) !important;
-    border-right: 1px solid rgba(0,0,0,0.04) !important;
-    border-bottom: 1px solid rgba(0,0,0,0.04) !important;
-    font-weight: 500 !important;
-    font-size: 14px !important;
-    line-height: 1.45 !important;
-    white-space: pre-line !important;
-    transition: transform 0.12s ease, box-shadow 0.12s ease !important;
-    position: relative !important;
+   The whole card is wrapped in an anchor that writes ?drill=<key>. */
+a.kpi-link {{
+    text-decoration: none !important;
+    color: inherit !important;
+    display: block;
 }}
-div[class*="st-key-tile_"] button::after {{
+a.kpi-link .kpi-card {{
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    position: relative;
+}}
+a.kpi-link .kpi-card::after {{
     content: "↗";
     position: absolute;
     top: 8px;
     right: 12px;
+    color: #94A3B8;
+    opacity: 0.55;
     font-size: 15px;
-    opacity: 0.5;
+    pointer-events: none;
 }}
-div[class*="st-key-tile_"] button:hover {{
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 14px rgba(14, 59, 59, 0.12) !important;
-}}
-/* Make the first line of the label (the KPI name) appear smaller and uppercase,
-   and the second line (the big number) prominent. We can't change font-sizes
-   per line in the button label itself, so we rely on markdown bold + sizing. */
-div[class*="st-key-tile_"] button p {{
-    margin: 0 !important;
-}}
-div[class*="st-key-tile_"] button p:first-child {{
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px !important;
-    opacity: 0.75;
-}}
-div[class*="st-key-tile_"] button p:nth-child(2) {{
-    font-size: 26px !important;
-    font-weight: 700 !important;
-    line-height: 1.1 !important;
-}}
-div[class*="st-key-tile_"] button p:nth-child(3) {{
-    font-size: 11.5px !important;
-    font-weight: 400 !important;
-    opacity: 0.75;
-    margin-top: 2px !important;
-}}
-
-/* Per-color schemes (match the static KPI cards) */
-.st-key-tile_not_submitted button {{
-    background: #FDF1E3 !important;
-    border-left-color: #EF6C00 !important;
-    color: #EF6C00 !important;
-}}
-.st-key-tile_paid button {{
-    background: #ECF6EE !important;
-    border-left-color: #2E7D32 !important;
-    color: #2E7D32 !important;
-}}
-.st-key-tile_denied button {{
-    background: #FBECEC !important;
-    border-left-color: #C62828 !important;
-    color: #C62828 !important;
-}}
-.st-key-tile_pending button {{
-    background: #F1F3F5 !important;
-    border-left-color: #6B7280 !important;
-    color: #374151 !important;
-}}
-.st-key-tile_resubmitted button {{
-    background: #F3EEF7 !important;
-    border-left-color: #6A1B9A !important;
-    color: #6A1B9A !important;
-}}
-.st-key-tile_outstanding button {{
-    background: #FDF6E3 !important;
-    border-left-color: #B8860B !important;
-    color: #B8860B !important;
-}}
-.st-key-tile_declined button {{
-    background: #F1F3F5 !important;
-    border-left-color: #6B7280 !important;
-    color: #374151 !important;
+a.kpi-link:hover .kpi-card {{
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(14, 59, 59, 0.12);
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -431,19 +364,13 @@ def static_kpi(column, label: str, value: str, color: str, sub: str = ""):
 
 def clickable_kpi(column, drill_key: str, label: str, value: str,
                   color: str, sub: str = ""):
-    """A KPI tile rendered as a native Streamlit button. Clicking opens the
-    drill-down panel with raw rows for that bucket."""
-    # Button label uses markdown; three paragraphs (label / value / sub)
-    # that CSS :nth-child styles at different sizes.
-    parts = [label, value]
-    if sub:
-        parts.append(sub)
-    btn_label = "\n\n".join(parts)
-    if column.button(btn_label, key=f"tile_{drill_key}",
-                     use_container_width=True,
-                     help=f"Click to view the raw claims behind this number"):
-        st.session_state["drill"] = drill_key
-        st.rerun()
+    """A KPI tile wrapped in an anchor link that writes ?drill=<key> to the URL.
+    Streamlit treats the query-param change as a soft rerun and the drill panel
+    reads the param to render the matching claim rows."""
+    card_html = kpi_card(label, value, color, sub)
+    link_html = (f'<a class="kpi-link" href="?drill={drill_key}" '
+                 f'target="_self">{card_html}</a>')
+    column.markdown(link_html, unsafe_allow_html=True)
 
 with st.container(border=True):
     st.markdown("##### KPI OVERVIEW")
@@ -507,9 +434,9 @@ with st.container(border=True):
 
 
 # -----------------------------------------------------------------------------
-# Drill-down panel — shows filtered rows for whichever KPI was clicked
+# Drill-down panel — reads the drill key from the URL query param
 # -----------------------------------------------------------------------------
-drill_key = st.session_state.get("drill")
+drill_key = st.query_params.get("drill")
 if drill_key and drill_key in DRILLS:
     label, filter_fn = DRILLS[drill_key]
     drill_df = filter_fn(fdf)
@@ -522,7 +449,7 @@ if drill_key and drill_key in DRILLS:
                          unsafe_allow_html=True)
         if hc_right.button("✕ Close", key="drill_close",
                            use_container_width=True):
-            st.session_state["drill"] = None
+            st.query_params.clear()
             st.rerun()
 
         if len(drill_df) == 0:

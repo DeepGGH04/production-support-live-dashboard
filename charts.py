@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 
 # Brand-neutral palette tuned for light + dark Streamlit themes.
 PALETTE = {
-    "Paid":                 "#2E7D32",
+    "Paid":                 "#0F9B6E",
     "Denied":               "#C62828",
     "Pending":              "#1F7A79",
     "Submitted":            "#1F7A79",
@@ -19,8 +19,8 @@ PALETTE = {
 }
 
 PRIMARY = "#1F7A79"   # GGH teal
-ACCENT = "#2E7D32"
-WARN = "#C62828"
+ACCENT  = "#0F9B6E"   # fresh emerald
+WARN    = "#C62828"
 
 
 def _common_layout(fig: go.Figure, height: int = 360) -> go.Figure:
