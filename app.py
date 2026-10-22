@@ -123,11 +123,13 @@ header[data-testid="stHeader"] {{ background: transparent; }}
     padding: 10px 12px;
     border-radius: 6px;
     background: #F8FAFC;
-    min-height: 82px;
+    min-height: 98px;
+    height: 98px;
     margin-bottom: 6px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow: hidden;
 }}
 .kpi-card .kpi-label {{
     text-transform: uppercase;
@@ -170,8 +172,9 @@ div[class*="st-key-tile_"] button[kind="secondary"],
 div[class*="st-key-tile_"] button[kind="primary"] {{
     text-align: left !important;
     padding: 10px 12px !important;
-    min-height: 82px !important;
-    height: 82px !important;
+    min-height: 98px !important;
+    height: 98px !important;
+    overflow: hidden !important;
     border-radius: 6px !important;
     border-left-width: 4px !important;
     border-left-style: solid !important;
