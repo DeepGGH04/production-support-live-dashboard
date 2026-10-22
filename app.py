@@ -176,7 +176,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] {{
     line-height: 1.1;
 }}
 .kpi-card .kpi-sub {{
-    font-size: 11.5px;
+    font-size: 12px;
     color: #64748B;
     margin-top: 4px;
     font-weight: 500;
@@ -225,9 +225,22 @@ div[class*="st-key-tile_"] button[kind="primary"] {{
     position: relative !important;
     cursor: pointer !important;
     display: flex !important;
+    flex-direction: column !important;
     align-items: flex-start !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+}}
+/* Tighten paragraph margins so label / value / sub stack cleanly */
+div[class*="st-key-tile_"] button p {{
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+    width: 100% !important;
+    text-transform: inherit !important;
+    display: block !important;
+}}
+div[class*="st-key-tile_"] button p + p {{
+    margin-top: 2px !important;
 }}
 div[class*="st-key-tile_"] button::after {{
     content: "↗";
@@ -244,7 +257,7 @@ div[class*="st-key-tile_"] button:hover {{
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 14px rgba(14, 59, 59, 0.12) !important;
 }}
-/* Force everything inside the button to left-align (Streamlit centers by default) */
+/* Streamlit wraps the markdown container inside the button; make it left-align */
 div[class*="st-key-tile_"] button > div,
 div[class*="st-key-tile_"] button div[data-testid="stMarkdownContainer"],
 div[class*="st-key-tile_"] button div[data-testid="stMarkdown"] {{
@@ -254,30 +267,19 @@ div[class*="st-key-tile_"] button div[data-testid="stMarkdown"] {{
     margin: 0 !important;
     padding: 0 !important;
 }}
-div[class*="st-key-tile_"] button p {{
-    margin: 0 !important;
-    text-align: left !important;
-    width: 100% !important;
-    text-transform: inherit !important;
-    display: block !important;
-}}
 /* Markdown bold inside the label becomes the big value */
 div[class*="st-key-tile_"] button strong {{
-    font-size: 21px !important;
+    font-size: 22px !important;
     font-weight: 700 !important;
-    display: block !important;
-    margin-top: 2px !important;
     letter-spacing: normal !important;
     text-transform: none !important;
     line-height: 1.1 !important;
 }}
 /* Markdown italic inside the label becomes the sub-text */
 div[class*="st-key-tile_"] button em {{
-    font-size: 11.5px !important;
+    font-size: 12px !important;
     font-style: normal !important;
     font-weight: 500 !important;
-    display: block !important;
-    margin-top: 3px !important;
     text-transform: none !important;
     letter-spacing: normal !important;
     color: #64748B !important;
@@ -526,15 +528,15 @@ def clickable_kpi(column, drill_key: str, label: str, value: str,
                   color: str, sub: str = ""):
     """A KPI tile rendered as a native Streamlit button. Clicking stays in-app
     (no page reload) and opens the drill panel for that bucket."""
-    # Streamlit's markdown parser treats $...$ as LaTeX math, so any sub-text
-    # with two dollar signs gets eaten. Escape $ to a literal in both value
-    # and sub so numbers render correctly.
+    # Streamlit's markdown parser treats $...$ as LaTeX math; escape to literal.
     value_safe = value.replace("$", "\\$")
     sub_safe   = sub.replace("$", "\\$") if sub else ""
+    # Use blank-line separators so each piece renders as its own <p>.
+    # CSS tightens the margins between those paragraphs.
     parts = [label, f"**{value_safe}**"]
     if sub_safe:
         parts.append(f"*{sub_safe}*")
-    btn_label = "  \n".join(parts)  # markdown hard line breaks (2 spaces + newline)
+    btn_label = "\n\n".join(parts)
     if column.button(btn_label, key=f"tile_{drill_key}",
                      use_container_width=True):
         st.session_state["drill"] = drill_key
