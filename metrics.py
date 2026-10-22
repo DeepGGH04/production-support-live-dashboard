@@ -101,10 +101,26 @@ def calculate_kpis(df: pd.DataFrame) -> dict:
     yet_to_submit        = int((~df["in_tracker"]).sum())
     declined_at_provider = int(df["is_declined_at_provider"].sum())
 
-    # NEW outstanding split:
-    #   Outstanding — Submitted  = in both files AND not Paid AND not Denied
-    #   Outstanding — Yet to Submit = NOT in tracker
+    # Outstanding split:
+    #   Pending       = in tracker, status Pending  (payer processing — normal)
+    #   Needs Rework  = in tracker, not Paid / not Denied / not Pending /
+    #                   not Declined-at-Provider  (rejected, missing status, resubmitted)
+    #   Yet to Submit = NOT in tracker (not yet entered pipeline)
+    outstanding_pending_mask = df["in_tracker"] & df["is_pending"]
+    outstanding_rework_mask  = (
+        df["in_tracker"] & ~df["is_paid"] & ~df["is_denied"]
+        & ~df["is_pending"] & ~df["is_declined_at_provider"]
+    )
     outstanding_sub_mask = df["in_tracker"] & ~df["is_paid"] & ~df["is_denied"]
+
+    outstanding_pending_count   = int(outstanding_pending_mask.sum())
+    outstanding_pending_charges = float(
+        df.loc[outstanding_pending_mask, "charge_amount_clean"].sum(skipna=True)
+    )
+    outstanding_rework_count    = int(outstanding_rework_mask.sum())
+    outstanding_rework_charges  = float(
+        df.loc[outstanding_rework_mask, "charge_amount_clean"].sum(skipna=True)
+    )
     outstanding_sub_count   = int(outstanding_sub_mask.sum())
     outstanding_sub_charges = float(
         df.loc[outstanding_sub_mask, "charge_amount_clean"].sum(skipna=True)
@@ -112,6 +128,29 @@ def calculate_kpis(df: pd.DataFrame) -> dict:
     yet_to_submit_charges = float(
         df.loc[~df["in_tracker"], "charge_amount_clean"].sum(skipna=True)
     )
+
+    # Oldest outstanding claim (days since Superbill Generated) for triage
+    submitted_outstanding_mask = (
+        df["in_tracker"] & ~df["is_paid"] & ~df["is_denied"] & ~df["is_declined_at_provider"]
+    )
+    if "days_since_generated" in df.columns:
+        _days = df.loc[submitted_outstanding_mask, "days_since_generated"].dropna()
+        oldest_outstanding_days = int(_days.max()) if len(_days) > 0 else 0
+    else:
+        oldest_outstanding_days = 0
+
+    # Procedure-code unit economics for G0019 / G0022
+    def _proc_stats(code: str):
+        if "Procedure Code" not in df.columns:
+            return 0, 0.0, 0.0
+        mask = df["Procedure Code"].astype(str).str.strip().str.upper() == code
+        cnt = int(mask.sum())
+        total = float(df.loc[mask, "charge_amount_clean"].sum(skipna=True))
+        avg = (total / cnt) if cnt > 0 else 0.0
+        return cnt, total, avg
+
+    g0019_count, g0019_charges, g0019_avg = _proc_stats("G0019")
+    g0022_count, g0022_charges, g0022_avg = _proc_stats("G0022")
 
     return {
         # Volume
@@ -137,12 +176,27 @@ def calculate_kpis(df: pd.DataFrame) -> dict:
         "charges_denied":              round(float(df.loc[df["is_denied"], "charge_amount_clean"].sum(skipna=True)), 2),
         "charges_pending":             round(float(df.loc[df["is_pending"],"charge_amount_clean"].sum(skipna=True)), 2),
         "charges_submitted":           round(float(df.loc[df["is_submitted"], "charge_amount_clean"].sum(skipna=True)), 2),
+        "outstanding_pending_count":   outstanding_pending_count,
+        "outstanding_pending_charges": round(outstanding_pending_charges, 2),
+        "outstanding_rework_count":    outstanding_rework_count,
+        "outstanding_rework_charges":  round(outstanding_rework_charges, 2),
         "outstanding_sub_count":       outstanding_sub_count,
         "outstanding_sub_charges":     round(outstanding_sub_charges, 2),
         "yet_to_submit_charges":       round(yet_to_submit_charges, 2),
         "charges_declined_at_provider":round(float(df.loc[df["is_declined_at_provider"], "charge_amount_clean"].sum(skipna=True)), 2),
 
-        # Back-compat aliases (so older callers / summary logic still work)
+        # Operational signal
+        "oldest_outstanding_days":     oldest_outstanding_days,
+
+        # Procedure-code unit economics (G0019 / G0022)
+        "g0019_count":   g0019_count,
+        "g0019_charges": round(g0019_charges, 2),
+        "g0019_avg":     round(g0019_avg, 2),
+        "g0022_count":   g0022_count,
+        "g0022_charges": round(g0022_charges, 2),
+        "g0022_avg":     round(g0022_avg, 2),
+
+        # Back-compat aliases
         "not_submitted_claims":        yet_to_submit,
         "missing_from_tracker":        yet_to_submit,
         "outstanding_charge":          round(outstanding_sub_charges + yet_to_submit_charges, 2),
@@ -317,9 +371,14 @@ def generate_executive_summary(df: pd.DataFrame, kpis: dict, monthly: dict,
 
     if kpis["outstanding_sub_charges"] > 0 or kpis["yet_to_submit_charges"] > 0:
         out.append(
-            f"${kpis['outstanding_sub_charges']:,.2f} outstanding on submitted claims "
-            f"(not Paid, not Denied); "
+            f"${kpis['outstanding_pending_charges']:,.2f} with payer (pending), "
+            f"${kpis['outstanding_rework_charges']:,.2f} needs rework, "
             f"${kpis['yet_to_submit_charges']:,.2f} still to submit."
+        )
+    if kpis.get("oldest_outstanding_days", 0) >= 60:
+        out.append(
+            f"Oldest outstanding submitted claim is {kpis['oldest_outstanding_days']} days old "
+            f"since SuperBill generation."
         )
 
     aged = df[df["is_outstanding"] & df["days_since_generated"].fillna(0).ge(91)]

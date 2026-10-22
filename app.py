@@ -292,9 +292,28 @@ div[class*="st-key-tile_"] button em {{
 .st-key-tile_outstanding_sub button:hover {{ background: #FFFBED !important; border-color: #FBE9B5 !important; }}
 .st-key-tile_outstanding_sub button strong {{ color: #A16207 !important; }}
 
+/* Outstanding — Pending → yellow (waiting on payer, routine) */
+.st-key-tile_outstanding_pending button       {{ border-left-color: #CA8A04 !important; }}
+.st-key-tile_outstanding_pending button:hover {{ background: #FFFBED !important; border-color: #FBE9B5 !important; }}
+.st-key-tile_outstanding_pending button strong {{ color: #A16207 !important; }}
+
+/* Outstanding — Needs Rework → amber-orange (action needed from us) */
+.st-key-tile_outstanding_rework button       {{ border-left-color: #EF6C00 !important; }}
+.st-key-tile_outstanding_rework button:hover {{ background: #FFF7EC !important; border-color: #FBE1C4 !important; }}
+.st-key-tile_outstanding_rework button strong {{ color: #EF6C00 !important; }}
+
 .st-key-tile_outstanding_yet button       {{ border-left-color: #C62828 !important; }}
 .st-key-tile_outstanding_yet button:hover {{ background: #FEF2F2 !important; border-color: #F8CFCF !important; }}
 .st-key-tile_outstanding_yet button strong {{ color: #C62828 !important; }}
+
+/* Procedure code tiles — neutral informational */
+.st-key-tile_g0019 button       {{ border-left-color: #0F766E !important; }}
+.st-key-tile_g0019 button:hover {{ background: #F0FAFA !important; border-color: #CFEEEE !important; }}
+.st-key-tile_g0019 button strong {{ color: #0F766E !important; }}
+
+.st-key-tile_g0022 button       {{ border-left-color: #0F766E !important; }}
+.st-key-tile_g0022 button:hover {{ background: #F0FAFA !important; border-color: #CFEEEE !important; }}
+.st-key-tile_g0022 button strong {{ color: #0F766E !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -426,22 +445,33 @@ summary  = metrics_mod.generate_executive_summary(fdf, kpis, monthly, payer_m, d
 # Drill-down mapping — maps a KPI key → (display label, filter function)
 # -----------------------------------------------------------------------------
 DRILLS = {
-    "submitted":        ("Claims Submitted",
-                         lambda d: d[d["is_submitted"]]),
-    "submitted_amt":    ("Charges — Submitted",
-                         lambda d: d[d["is_submitted"]]),
-    "yet_to_submit":    ("Yet to Submit (not in Revenue Tracker)",
-                         lambda d: d[~d["in_tracker"]]),
-    "paid":             ("Paid Claims",
-                         lambda d: d[d["is_paid"]]),
-    "denied":           ("Denied Claims",
-                         lambda d: d[d["is_denied"]]),
-    "declined":         ("Declined at Provider",
-                         lambda d: d[d["is_declined_at_provider"]]),
-    "outstanding_sub":  ("Outstanding — Submitted (not Paid, not Denied)",
-                         lambda d: d[d["in_tracker"] & ~d["is_paid"] & ~d["is_denied"]]),
-    "outstanding_yet":  ("Outstanding — Yet to Submit",
-                         lambda d: d[~d["in_tracker"]]),
+    "submitted":            ("Claims Submitted",
+                             lambda d: d[d["is_submitted"]]),
+    "submitted_amt":        ("Charges — Submitted",
+                             lambda d: d[d["is_submitted"]]),
+    "yet_to_submit":        ("Yet to Submit (not in Revenue Tracker)",
+                             lambda d: d[~d["in_tracker"]]),
+    "paid":                 ("Paid Claims",
+                             lambda d: d[d["is_paid"]]),
+    "denied":               ("Denied Claims",
+                             lambda d: d[d["is_denied"]]),
+    "declined":             ("Declined at Provider",
+                             lambda d: d[d["is_declined_at_provider"]]),
+    "outstanding_pending":  ("Outstanding — Pending (payer processing)",
+                             lambda d: d[d["in_tracker"] & d["is_pending"]]),
+    "outstanding_rework":   ("Outstanding — Needs Rework (rejected / missing status / resubmitted)",
+                             lambda d: d[d["in_tracker"] & ~d["is_paid"] & ~d["is_denied"]
+                                         & ~d["is_pending"] & ~d["is_declined_at_provider"]]),
+    "outstanding_sub":      ("Outstanding — Submitted (not Paid, not Denied)",
+                             lambda d: d[d["in_tracker"] & ~d["is_paid"] & ~d["is_denied"]]),
+    "outstanding_yet":      ("Outstanding — Yet to Submit",
+                             lambda d: d[~d["in_tracker"]]),
+    "g0019":                ("G0019 — Billable items",
+                             lambda d: d[d.get("Procedure Code", pd.Series([None]*len(d)))
+                                         .astype(str).str.strip().str.upper() == "G0019"]),
+    "g0022":                ("G0022 — Billable items",
+                             lambda d: d[d.get("Procedure Code", pd.Series([None]*len(d)))
+                                         .astype(str).str.strip().str.upper() == "G0022"]),
 }
 
 
@@ -517,35 +547,53 @@ with st.container(border=True):
                   f"{kpis['declined_at_provider_claims']:,}", "rose",
                   f"${kpis['charges_declined_at_provider']:,.2f} not billed")
 
-    # FINANCIAL & FOLLOW-UP — 4 tiles (dropped standalone Charges — Denied)
-    st.markdown('<div class="kpi-section-label">FINANCIAL &amp; FOLLOW-UP</div>',
+    # OUTSTANDING — split by actionability
+    st.markdown('<div class="kpi-section-label">OUTSTANDING (ACTION QUEUE)</div>',
                 unsafe_allow_html=True)
+    oldest_sub = (f"Oldest {kpis['oldest_outstanding_days']} days"
+                  if kpis['oldest_outstanding_days'] else "No submitted outstanding")
     f = st.columns(4)
-    clickable_kpi(f[0], "submitted_amt", "Charges — Submitted",
-                  f"${kpis['charges_submitted']:,.2f}", "blue",
-                  f"{kpis['total_submitted']:,} claims")
-    static_kpi(f[1], "Charges — Paid",
-               f"${kpis['charges_paid']:,.2f}", "green",
-               "Not revenue collected")
-    clickable_kpi(f[2], "outstanding_sub", "Outstanding — Submitted",
-                  f"${kpis['outstanding_sub_charges']:,.2f}", "amber",
-                  f"{kpis['outstanding_sub_count']:,} claims · not Paid / not Denied")
-    clickable_kpi(f[3], "outstanding_yet", "Outstanding — Yet to Submit",
+    clickable_kpi(f[0], "outstanding_pending", "Outstanding — Pending",
+                  f"${kpis['outstanding_pending_charges']:,.2f}", "amber",
+                  f"{kpis['outstanding_pending_count']:,} with payer · {oldest_sub}")
+    clickable_kpi(f[1], "outstanding_rework", "Outstanding — Needs Rework",
+                  f"${kpis['outstanding_rework_charges']:,.2f}", "orange",
+                  f"{kpis['outstanding_rework_count']:,} rejected / missing / resubmitted")
+    clickable_kpi(f[2], "outstanding_yet", "Outstanding — Yet to Submit",
                   f"${kpis['yet_to_submit_charges']:,.2f}", "orange",
                   f"{kpis['yet_to_submit_count']:,} SuperBills not in Tracker")
+    clickable_kpi(f[3], "submitted_amt", "Charges — Submitted",
+                  f"${kpis['charges_submitted']:,.2f}", "blue",
+                  f"{kpis['total_submitted']:,} claims in payer pipeline")
+
+    # BY PROCEDURE CODE — unit economics for the two billable codes
+    st.markdown('<div class="kpi-section-label">BY PROCEDURE CODE</div>',
+                unsafe_allow_html=True)
+    p = st.columns(2)
+    clickable_kpi(p[0], "g0019", "G0019 — Items",
+                  f"{kpis['g0019_count']:,}", "blue",
+                  f"${kpis['g0019_charges']:,.2f} total · "
+                  f"${kpis['g0019_avg']:,.2f} avg")
+    clickable_kpi(p[1], "g0022", "G0022 — Items",
+                  f"{kpis['g0022_count']:,}", "blue",
+                  f"${kpis['g0022_charges']:,.2f} total · "
+                  f"${kpis['g0022_avg']:,.2f} avg")
 
     with st.expander("KPI definitions"):
         st.markdown("""
-- **Total SuperBills** — distinct count of (Billing Provider NPI × SuperBill ID) in the SuperBill file.
-- **Total Billable Items** — count of all SuperBill rows after filters.
-- **Total Charge Amount** — sum of Charge Amount. **Not** collected revenue.
+- **Total Billable Items** — count of SuperBill rows after filters.
+- **Total SuperBills** — distinct (Billing Provider NPI × SuperBill ID). Shown as sub-text of Billable Items.
+- **Total Charge Amount** — sum of Charge Amount. **Not** collected revenue (awaiting EOB integration).
 - **Claims Submitted** — tracker status is Paid / Denied / Pending / Resubmitted / Rejected.
 - **Submission Rate** — Claims Submitted ÷ Total Billable Items.
 - **Paid / Denial Rate** — of submitted claims only.
 - **Yet to Submit** — SuperBills with no matching Revenue Tracker row.
-- **Outstanding — Submitted** — in both files, not Paid and not Denied.
+- **Outstanding — Pending** — in both files, status *Pending* (payer is adjudicating; normal timeline).
+- **Outstanding — Needs Rework** — in both files, not Paid / not Denied / not Pending / not Declined (rejected, missing status, resubmitted — needs action from the billing team).
 - **Outstanding — Yet to Submit** — total charges on SuperBills that haven't reached the Tracker.
 - **Declined at Provider** — provider chose not to bill; not counted as Yet to Submit.
+- **Oldest N days** — oldest submitted-outstanding claim's days since SuperBill generation (triage signal).
+- **G0019 / G0022** — unit economics by procedure code (community health integration & add-on).
 """)
 
 
