@@ -120,10 +120,10 @@ header[data-testid="stHeader"] {{ background: transparent; }}
 /* KPI cards (static tiles) */
 .kpi-card {{
     border-left: 4px solid;
-    padding: 12px 14px;
+    padding: 10px 12px;
     border-radius: 6px;
     background: #F8FAFC;
-    min-height: 110px;
+    min-height: 82px;
     margin-bottom: 6px;
     display: flex;
     flex-direction: column;
@@ -131,26 +131,26 @@ header[data-testid="stHeader"] {{ background: transparent; }}
 }}
 .kpi-card .kpi-label {{
     text-transform: uppercase;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
     color: #475569;
 }}
 .kpi-card .kpi-value {{
-    font-size: 26px;
+    font-size: 21px;
     font-weight: 700;
-    margin-top: 4px;
+    margin-top: 2px;
     line-height: 1.1;
 }}
 .kpi-card .kpi-sub {{
-    font-size: 11.5px;
+    font-size: 10.5px;
     color: #64748B;
-    margin-top: 4px;
+    margin-top: 2px;
 }}
 
-/* Brand-tinted teal (primary) + status variants */
-.kpi-blue   {{ background: #E8F2F2; border-color: {GGH_TEAL}; }}
-.kpi-blue   .kpi-value {{ color: {GGH_TEAL}; }}
+/* True blue for Volume tiles + status variants */
+.kpi-blue   {{ background: #EEF2FF; border-color: #2563EB; }}
+.kpi-blue   .kpi-value {{ color: #2563EB; }}
 .kpi-green  {{ background: #E6F7F0; border-color: #0F9B6E; }}
 .kpi-green  .kpi-value {{ color: #0F9B6E; }}
 .kpi-red    {{ background: #FBECEC; border-color: #C62828; }}
@@ -169,20 +169,20 @@ div[class*="st-key-tile_"] button,
 div[class*="st-key-tile_"] button[kind="secondary"],
 div[class*="st-key-tile_"] button[kind="primary"] {{
     text-align: left !important;
-    padding: 12px 14px !important;
-    min-height: 110px !important;
-    height: 110px !important;
+    padding: 10px 12px !important;
+    min-height: 82px !important;
+    height: 82px !important;
     border-radius: 6px !important;
     border-left-width: 4px !important;
     border-left-style: solid !important;
     border-top: 1px solid rgba(0,0,0,0.04) !important;
     border-right: 1px solid rgba(0,0,0,0.04) !important;
     border-bottom: 1px solid rgba(0,0,0,0.04) !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.5px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.4px !important;
     text-transform: uppercase !important;
-    line-height: 1.4 !important;
+    line-height: 1.3 !important;
     transition: transform 0.12s, box-shadow 0.12s !important;
     position: relative !important;
     cursor: pointer !important;
@@ -194,9 +194,9 @@ div[class*="st-key-tile_"] button[kind="primary"] {{
 div[class*="st-key-tile_"] button::after {{
     content: "↗";
     position: absolute;
-    top: 8px;
-    right: 12px;
-    font-size: 14px;
+    top: 6px;
+    right: 10px;
+    font-size: 12px;
     opacity: 0.5;
     letter-spacing: normal;
     text-transform: none;
@@ -225,17 +225,17 @@ div[class*="st-key-tile_"] button p {{
 }}
 /* Markdown bold inside the label becomes the big value */
 div[class*="st-key-tile_"] button strong {{
-    font-size: 26px !important;
+    font-size: 21px !important;
     font-weight: 700 !important;
     display: block !important;
-    margin-top: 4px !important;
+    margin-top: 2px !important;
     letter-spacing: normal !important;
     text-transform: none !important;
     line-height: 1.1 !important;
 }}
 /* Markdown italic inside the label becomes the sub-text */
 div[class*="st-key-tile_"] button em {{
-    font-size: 11.5px !important;
+    font-size: 10.5px !important;
     font-style: normal !important;
     font-weight: 400 !important;
     display: block !important;
