@@ -591,16 +591,30 @@ with st.container(border=True):
                   f"{kpis['declined_at_provider_claims']:,}", "rose",
                   f"${kpis['charges_declined_at_provider']:,.2f} not billed")
 
-    # CHARGES BREAKDOWN — every bucket sums to Total Charge Amount
+    # CHARGES SUBMISSION STATUS — top-level split of Total Charges
     total_charges = kpis['total_charge_amount']
     st.markdown(
-        f'<div class="kpi-section-label">CHARGES BREAKDOWN — '
+        f'<div class="kpi-section-label">CHARGES SUBMISSION STATUS — '
         f'totals ${total_charges:,.2f}</div>',
         unsafe_allow_html=True,
     )
+    s = st.columns(2)
+    clickable_kpi(s[0], "submitted_amt", "Charges — Submitted",
+                  f"${kpis['charges_submitted']:,.2f}", "blue",
+                  f"{kpis['total_submitted']:,} claims in payer pipeline")
+    clickable_kpi(s[1], "outstanding_yet", "Charges — Yet to Submit",
+                  f"${kpis['yet_to_submit_charges']:,.2f}", "red",
+                  f"{kpis['yet_to_submit_count']:,} SuperBills not in Tracker")
+
+    # CHARGES BREAKDOWN — splits the Submitted bucket by status
     oldest_sub = (f" · oldest {kpis['oldest_outstanding_days']}d"
                   if kpis['oldest_outstanding_days'] else "")
-    cb = st.columns(6)
+    st.markdown(
+        f'<div class="kpi-section-label">CHARGES BREAKDOWN (of Submitted) — '
+        f'totals ${kpis["charges_submitted"]:,.2f}</div>',
+        unsafe_allow_html=True,
+    )
+    cb = st.columns(4)
     clickable_kpi(cb[0], "charges_paid", "Paid",
                   f"${kpis['charges_paid']:,.2f}", "green",
                   f"{kpis['paid_claims']:,} claims")
@@ -613,12 +627,6 @@ with st.container(border=True):
     clickable_kpi(cb[3], "outstanding_rework", "Outstanding — Needs Rework",
                   f"${kpis['outstanding_rework_charges']:,.2f}", "orange",
                   f"{kpis['outstanding_rework_count']:,} to rework")
-    clickable_kpi(cb[4], "outstanding_yet", "Outstanding — Yet to Submit",
-                  f"${kpis['yet_to_submit_charges']:,.2f}", "red",
-                  f"{kpis['yet_to_submit_count']:,} SuperBills")
-    clickable_kpi(cb[5], "charges_declined", "Declined at Provider",
-                  f"${kpis['charges_declined_at_provider']:,.2f}", "rose",
-                  f"{kpis['declined_at_provider_claims']:,} claims")
 
     # BY PROCEDURE CODE — unit economics for the two billable codes
     st.markdown('<div class="kpi-section-label">BY PROCEDURE CODE</div>',
