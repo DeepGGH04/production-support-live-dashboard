@@ -300,17 +300,26 @@ div[class*="st-key-tile_"] button em {{
 .st-key-tile_yet_to_submit button:hover {{ background: #FFF7EC !important; border-color: #FBE1C4 !important; }}
 .st-key-tile_yet_to_submit button strong {{ color: #EF6C00 !important; }}
 
-.st-key-tile_paid button       {{ border-left-color: #0F9B6E !important; }}
-.st-key-tile_paid button:hover {{ background: #F0FBF6 !important; border-color: #D1F0E1 !important; }}
-.st-key-tile_paid button strong {{ color: #0F9B6E !important; }}
+.st-key-tile_paid button,
+.st-key-tile_charges_paid button       {{ border-left-color: #0F9B6E !important; }}
+.st-key-tile_paid button:hover,
+.st-key-tile_charges_paid button:hover {{ background: #F0FBF6 !important; border-color: #D1F0E1 !important; }}
+.st-key-tile_paid button strong,
+.st-key-tile_charges_paid button strong {{ color: #0F9B6E !important; }}
 
-.st-key-tile_denied button       {{ border-left-color: #C62828 !important; }}
-.st-key-tile_denied button:hover {{ background: #FEF2F2 !important; border-color: #F8CFCF !important; }}
-.st-key-tile_denied button strong {{ color: #C62828 !important; }}
+.st-key-tile_denied button,
+.st-key-tile_charges_denied button       {{ border-left-color: #C62828 !important; }}
+.st-key-tile_denied button:hover,
+.st-key-tile_charges_denied button:hover {{ background: #FEF2F2 !important; border-color: #F8CFCF !important; }}
+.st-key-tile_denied button strong,
+.st-key-tile_charges_denied button strong {{ color: #C62828 !important; }}
 
-.st-key-tile_declined button       {{ border-left-color: #DB2777 !important; }}
-.st-key-tile_declined button:hover {{ background: #FDF4F8 !important; border-color: #F7D4E5 !important; }}
-.st-key-tile_declined button strong {{ color: #BE185D !important; }}
+.st-key-tile_declined button,
+.st-key-tile_charges_declined button       {{ border-left-color: #DB2777 !important; }}
+.st-key-tile_declined button:hover,
+.st-key-tile_charges_declined button:hover {{ background: #FDF4F8 !important; border-color: #F7D4E5 !important; }}
+.st-key-tile_declined button strong,
+.st-key-tile_charges_declined button strong {{ color: #BE185D !important; }}
 
 .st-key-tile_outstanding_sub button       {{ border-left-color: #CA8A04 !important; }}
 .st-key-tile_outstanding_sub button:hover {{ background: #FFFBED !important; border-color: #FBE9B5 !important; }}
@@ -477,9 +486,15 @@ DRILLS = {
                              lambda d: d[~d["in_tracker"]]),
     "paid":                 ("Paid Claims",
                              lambda d: d[d["is_paid"]]),
+    "charges_paid":         ("Paid Claims",
+                             lambda d: d[d["is_paid"]]),
     "denied":               ("Denied Claims",
                              lambda d: d[d["is_denied"]]),
+    "charges_denied":       ("Denied Claims",
+                             lambda d: d[d["is_denied"]]),
     "declined":             ("Declined at Provider",
+                             lambda d: d[d["is_declined_at_provider"]]),
+    "charges_declined":     ("Declined at Provider",
                              lambda d: d[d["is_declined_at_provider"]]),
     "outstanding_pending":  ("Outstanding — Pending (payer processing)",
                              lambda d: d[d["in_tracker"] & d["is_pending"]]),
@@ -576,24 +591,34 @@ with st.container(border=True):
                   f"{kpis['declined_at_provider_claims']:,}", "rose",
                   f"${kpis['charges_declined_at_provider']:,.2f} not billed")
 
-    # OUTSTANDING — split by actionability
-    st.markdown('<div class="kpi-section-label">OUTSTANDING (ACTION QUEUE)</div>',
-                unsafe_allow_html=True)
+    # CHARGES BREAKDOWN — every bucket sums to Total Charge Amount
+    total_charges = kpis['total_charge_amount']
+    st.markdown(
+        f'<div class="kpi-section-label">CHARGES BREAKDOWN — '
+        f'totals ${total_charges:,.2f}</div>',
+        unsafe_allow_html=True,
+    )
     oldest_sub = (f" · oldest {kpis['oldest_outstanding_days']}d"
                   if kpis['oldest_outstanding_days'] else "")
-    f = st.columns(4)
-    clickable_kpi(f[0], "outstanding_pending", "Outstanding — Pending",
+    cb = st.columns(6)
+    clickable_kpi(cb[0], "charges_paid", "Paid",
+                  f"${kpis['charges_paid']:,.2f}", "green",
+                  f"{kpis['paid_claims']:,} claims")
+    clickable_kpi(cb[1], "charges_denied", "Denied",
+                  f"${kpis['charges_denied']:,.2f}", "red",
+                  f"{kpis['denied_claims']:,} claims")
+    clickable_kpi(cb[2], "outstanding_pending", "Outstanding — Pending",
                   f"${kpis['outstanding_pending_charges']:,.2f}", "amber",
                   f"{kpis['outstanding_pending_count']:,} with payer{oldest_sub}")
-    clickable_kpi(f[1], "outstanding_rework", "Outstanding — Needs Rework",
+    clickable_kpi(cb[3], "outstanding_rework", "Outstanding — Needs Rework",
                   f"${kpis['outstanding_rework_charges']:,.2f}", "orange",
                   f"{kpis['outstanding_rework_count']:,} to rework")
-    clickable_kpi(f[2], "outstanding_yet", "Outstanding — Yet to Submit",
-                  f"${kpis['yet_to_submit_charges']:,.2f}", "orange",
-                  f"{kpis['yet_to_submit_count']:,} not in Tracker")
-    clickable_kpi(f[3], "submitted_amt", "Charges — Submitted",
-                  f"${kpis['charges_submitted']:,.2f}", "blue",
-                  f"{kpis['total_submitted']:,} in pipeline")
+    clickable_kpi(cb[4], "outstanding_yet", "Outstanding — Yet to Submit",
+                  f"${kpis['yet_to_submit_charges']:,.2f}", "red",
+                  f"{kpis['yet_to_submit_count']:,} SuperBills")
+    clickable_kpi(cb[5], "charges_declined", "Declined at Provider",
+                  f"${kpis['charges_declined_at_provider']:,.2f}", "rose",
+                  f"{kpis['declined_at_provider_claims']:,} claims")
 
     # BY PROCEDURE CODE — unit economics for the two billable codes
     st.markdown('<div class="kpi-section-label">BY PROCEDURE CODE</div>',
