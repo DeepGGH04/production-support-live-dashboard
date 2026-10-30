@@ -57,6 +57,14 @@ CLAIM_STATUS_MAP = {
     "closed - paid": "Paid",
     "closed paid": "Paid",
 
+    # Partially Paid — payer paid less than billed; counts as resolved,
+    # charges roll up into the Paid bucket, but we keep a separate tile count.
+    "short paid":      "Partially Paid",
+    "shortpaid":       "Partially Paid",
+    "partially paid":  "Partially Paid",
+    "partial paid":    "Partially Paid",
+    "partial payment": "Partially Paid",
+
     # Denied
     "denied": "Denied",
     "denial": "Denied",

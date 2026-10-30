@@ -334,6 +334,7 @@ def derive_fields(df: pd.DataFrame) -> pd.DataFrame:
 
     s = df["claim_status_normalized"]
     df["is_paid"]                 = s.eq("Paid")
+    df["is_partially_paid"]       = s.eq("Partially Paid")
     df["is_denied"]               = s.eq("Denied")
     df["is_pending"]              = s.eq("Pending")
     df["is_rejected"]             = s.eq("Rejected")
@@ -346,7 +347,7 @@ def derive_fields(df: pd.DataFrame) -> pd.DataFrame:
     df[sub_col] = df[sub_col].where(df["in_tracker"], False)
 
     df["is_submitted"] = s.isin(
-        ["Paid", "Denied", "Pending", "Resubmitted", "Rejected"]
+        ["Paid", "Partially Paid", "Denied", "Pending", "Resubmitted", "Rejected"]
     )
 
     df["is_sent_to_provider"]     = df.get("Sent to Provider_norm", "Unknown")
@@ -390,7 +391,9 @@ def derive_fields(df: pd.DataFrame) -> pd.DataFrame:
         )
     df["aging_bucket"] = df["days_since_generated"].map(_aging_bucket)
 
-    df["is_outstanding"] = df["is_submitted"] & ~df["is_paid"] & ~df["is_rejected"]
+    # Outstanding = submitted but not resolved. Paid, Partially Paid, Rejected are resolved.
+    df["is_outstanding"] = (df["is_submitted"] & ~df["is_paid"]
+                            & ~df["is_partially_paid"] & ~df["is_rejected"])
 
     df["missing_claim_number"] = df.get("Claim #", pd.Series([None] * len(df))).map(
         lambda v: _norm_str(v) is None

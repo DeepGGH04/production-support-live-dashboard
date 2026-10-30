@@ -307,6 +307,11 @@ div[class*="st-key-tile_"] button em {{
 .st-key-tile_paid button strong,
 .st-key-tile_charges_paid button strong {{ color: #0F9B6E !important; }}
 
+/* Partially Paid — teal (distinct from fully-Paid green) */
+.st-key-tile_partially_paid button       {{ border-left-color: #0D9488 !important; }}
+.st-key-tile_partially_paid button:hover {{ background: #F0FDFA !important; border-color: #C7EDE9 !important; }}
+.st-key-tile_partially_paid button strong {{ color: #0D9488 !important; }}
+
 .st-key-tile_denied button,
 .st-key-tile_charges_denied button       {{ border-left-color: #C62828 !important; }}
 .st-key-tile_denied button:hover,
@@ -486,8 +491,12 @@ DRILLS = {
                              lambda d: d[~d["in_tracker"]]),
     "paid":                 ("Paid Claims",
                              lambda d: d[d["is_paid"]]),
-    "charges_paid":         ("Paid Claims",
-                             lambda d: d[d["is_paid"]]),
+    "charges_paid":         ("Paid + Partially Paid Claims",
+                             lambda d: d[d["is_paid"] | d.get("is_partially_paid",
+                                                              pd.Series([False]*len(d), index=d.index))]),
+    "partially_paid":       ("Partially Paid Claims",
+                             lambda d: d[d.get("is_partially_paid",
+                                               pd.Series([False]*len(d), index=d.index))]),
     "denied":               ("Denied Claims",
                              lambda d: d[d["is_denied"]]),
     "charges_denied":       ("Denied Claims",
@@ -580,14 +589,17 @@ with st.container(border=True):
     # CLAIM OUTCOMES — enriched sub-text with rate AND dollar amount
     st.markdown('<div class="kpi-section-label">CLAIM OUTCOMES</div>',
                 unsafe_allow_html=True)
-    o = st.columns(3)
+    o = st.columns(4)
     clickable_kpi(o[0], "paid", "Paid Claims",
                   f"{kpis['paid_claims']:,}", "green",
                   f"Paid Rate {kpis['paid_rate']:.1f}% · ${kpis['charges_paid']:,.2f}")
-    clickable_kpi(o[1], "denied", "Denied Claims",
+    clickable_kpi(o[1], "partially_paid", "Partially Paid",
+                  f"{kpis['partially_paid_claims']:,}", "teal",
+                  f"${kpis['charges_partially_paid']:,.2f} · counts in Paid $")
+    clickable_kpi(o[2], "denied", "Denied Claims",
                   f"{kpis['denied_claims']:,}", "red",
                   f"Denial Rate {kpis['denial_rate']:.1f}% · ${kpis['charges_denied']:,.2f}")
-    clickable_kpi(o[2], "declined", "Declined at Provider",
+    clickable_kpi(o[3], "declined", "Declined at Provider",
                   f"{kpis['declined_at_provider_claims']:,}", "rose",
                   f"${kpis['charges_declined_at_provider']:,.2f} not billed")
 

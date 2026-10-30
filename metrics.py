@@ -94,6 +94,7 @@ def calculate_kpis(df: pd.DataFrame) -> dict:
 
     submitted            = int(df["is_submitted"].sum())
     paid                 = int(df["is_paid"].sum())
+    partially_paid       = int(df["is_partially_paid"].sum()) if "is_partially_paid" in df.columns else 0
     denied               = int(df["is_denied"].sum())
     pending              = int(df["is_pending"].sum())
     resubmitted          = int(s.eq("Resubmitted").sum())
@@ -101,17 +102,20 @@ def calculate_kpis(df: pd.DataFrame) -> dict:
     yet_to_submit        = int((~df["in_tracker"]).sum())
     declined_at_provider = int(df["is_declined_at_provider"].sum())
 
-    # Outstanding split:
+    # Outstanding split (Partially Paid is treated as resolved, like Paid):
     #   Pending       = in tracker, status Pending  (payer processing — normal)
-    #   Needs Rework  = in tracker, not Paid / not Denied / not Pending /
-    #                   not Declined-at-Provider  (rejected, missing status, resubmitted)
+    #   Needs Rework  = in tracker, not Paid / not Partially Paid / not Denied /
+    #                   not Pending / not Declined-at-Provider  (rejected, missing status, resubmitted)
     #   Yet to Submit = NOT in tracker (not yet entered pipeline)
+    partial_mask = (df["is_partially_paid"] if "is_partially_paid" in df.columns
+                    else pd.Series([False] * len(df), index=df.index))
     outstanding_pending_mask = df["in_tracker"] & df["is_pending"]
     outstanding_rework_mask  = (
-        df["in_tracker"] & ~df["is_paid"] & ~df["is_denied"]
+        df["in_tracker"] & ~df["is_paid"] & ~partial_mask & ~df["is_denied"]
         & ~df["is_pending"] & ~df["is_declined_at_provider"]
     )
-    outstanding_sub_mask = df["in_tracker"] & ~df["is_paid"] & ~df["is_denied"]
+    outstanding_sub_mask = (df["in_tracker"] & ~df["is_paid"]
+                            & ~partial_mask & ~df["is_denied"])
 
     outstanding_pending_count   = int(outstanding_pending_mask.sum())
     outstanding_pending_charges = float(
@@ -163,6 +167,7 @@ def calculate_kpis(df: pd.DataFrame) -> dict:
 
         # Outcomes
         "paid_claims":                 paid,
+        "partially_paid_claims":       partially_paid,
         "paid_rate":                   round(100 * _safe_div(paid, submitted), 2),
         "denied_claims":               denied,
         "denial_rate":                 round(100 * _safe_div(denied, submitted), 2),
@@ -171,8 +176,9 @@ def calculate_kpis(df: pd.DataFrame) -> dict:
         "rejected_claims":             rejected,
         "declined_at_provider_claims": declined_at_provider,
 
-        # Financial
-        "charges_paid":                round(float(df.loc[df["is_paid"],   "charge_amount_clean"].sum(skipna=True)), 2),
+        # Financial — Charges Paid now includes Partially Paid amounts
+        "charges_paid":                round(float(df.loc[df["is_paid"] | partial_mask, "charge_amount_clean"].sum(skipna=True)), 2),
+        "charges_partially_paid":      round(float(df.loc[partial_mask, "charge_amount_clean"].sum(skipna=True)), 2),
         "charges_denied":              round(float(df.loc[df["is_denied"], "charge_amount_clean"].sum(skipna=True)), 2),
         "charges_pending":             round(float(df.loc[df["is_pending"],"charge_amount_clean"].sum(skipna=True)), 2),
         "charges_submitted":           round(float(df.loc[df["is_submitted"], "charge_amount_clean"].sum(skipna=True)), 2),
